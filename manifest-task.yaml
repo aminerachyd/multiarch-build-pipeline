@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: manifest
+spec:
+  steps:
+  - name: build-step
+    image: registry.access.redhat.com/ubi8/ubi
+    command:
+    - /bin/bash
+    - -c
+    - |
+      echo 'Mock manifest step'

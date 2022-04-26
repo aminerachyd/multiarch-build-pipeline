@@ -29,6 +29,15 @@ spec:
       description: 'Endpoint to check health after deployment, defaults /'
       name: health-endpoint
       type: string
+    - name: x86-server-url
+      description: 'X86 cluster API server for multiarch build'
+      type: string
+   #- name: power-server-url
+   #  description: 'Power cluster API server for multiarch build'
+   #  type: string
+   #- name: z-server-url
+   #  description: 'Z cluster API server for multiarch build'
+   #  type: string
   tasks:
   - name: setup
     params:
@@ -43,7 +52,7 @@ spec:
       - name: health-protocol
         value: $(params.health-protocol)
       - name: lint-dockerfile
-        value: $(params.git-url)
+        value: $(params.lint-dockerfile)
     taskRef:
       kind: Task
       name: ibm-setup-v2-7-8
@@ -71,79 +80,67 @@ spec:
       - name: source-dir
         value: $(tasks.setup.results.source-dir)
       - name: lint-dockerfile
-        value: $(tasks.setup.results.lint-dockerfile)
+        value: $(tasks.setup.results.dockerfile-lint)
     runAfter:
       - code-lint
     taskRef:
       kind: Task
-      name: ibm-dockerfile-kint-v2-7-7
+      name: ibm-dockerfile-lint-v2-7-7
   - name: build-x86
     params:
+      - name: git-url
+        value: $(tasks.setup.results.git-url)
       - name: pipeline-name
-        value: build-push-x86
+        value: build-push
       - name: pipeline-namespace
-        value: build-push-x86
+        value: multiarch-demo
       - name: openshift-server-url
-        value: XXX_X86_SERVER_URL_HERE
+        value: $(params.x86-server-url)
       - name: openshift-token-secret
         value: builder-cluster-x86-secret
-      #- name: git-url
-      #  value: $(tasks.setup.results.git-url)
-      #- name: git-revision
-      #  value: $(tasks.setup.results.git-revision)
-      #- name: source-dir
-      #  value: $(tasks.setup.results.source-dir)
-      #- name: image-server
-      #  value: $(tasks.setup.results.image-server)
-      #- name: image-namespace
-      #  value: $(tasks.setup.results.image-namespace)
-      #- name: image-repository
-      #  value: $(tasks.setup.results.image-repository)
-      #- name: image-tag
-      #  value: $(tasks.setup.results.image-tag)
     runAfter:
       - dockerfile-lint
     taskRef:
       kind: Task
       name: execute-remote-pipeline
-  - name: build-power
-    params:
-      - name: pipeline-name
-        value: build-push-power
-      - name: pipeline-namespace
-        value: build-push-power
-      - name: openshift-server-url
-        value: XXX_POWER_SERVER_URL_HERE
-      - name: openshift-token-secret
-        value: builder-cluster-power-secret
-    runAfter:
-      - dockerfile-lint
-    taskRef:
-      kind: Task
-      name: execute-remote-pipeline
-  - name: build-z
-    params:
-      - name: pipeline-name
-        value: build-push-z
-      - name: pipeline-namespace
-        value: build-push-z
-      - name: openshift-server-url
-        value: XXX_Z_SERVER_URL_HERE
-      - name: openshift-token-secret
-        value: builder-cluster-z-secret
-    runAfter:
-      - dockerfile-lint
-    taskRef:
-      kind: Task
-      name: execute-remote-pipeline
+        # - name: build-power
+        #   params:
+        #     - name: pipeline-name
+        #       value: build-push
+        #     - name: pipeline-namespace
+        #       value: multiarch-demo
+        #     - name: openshift-server-url
+        #       value: $(params.power-server-url)
+        #     - name: openshift-token-secret
+        #       value: builder-cluster-power-secret
+        #   runAfter:
+        #     - dockerfile-lint
+        #   taskRef:
+        #     kind: Task
+        #     name: execute-remote-pipeline
+        # - name: build-z
+        #   params:
+        #     - name: pipeline-name
+        #       value: build-push
+        #     - name: pipeline-namespace
+        #       value: multiarch-demo
+        #     - name: openshift-server-url
+        #       value: $(params.z-server-url)
+        #     - name: openshift-token-secret
+        #       value: builder-cluster-z-secret
+        #   runAfter:
+        #     - dockerfile-lint
+        #   taskRef:
+        #     kind: Task
+        #     name: execute-remote-pipeline
   - name: manifest
     taskRef:
       kind: Task
       name: manifest
     runAfter:
       - build-x86
-      - build-z
-      - build-power
+        #     - build-z
+        #     - build-power
   - name: deploy
     params:
       - name: git-url
