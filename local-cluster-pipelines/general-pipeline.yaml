@@ -51,6 +51,10 @@ spec:
         value: $(params.git-url)
       - name: git-revision
         value: $(params.git-revision)
+      - name: image-server
+        value: $(params.image-server)
+      - name: image-namespace
+        value: $(params.image-namespace)
       - name: scan-image
         value: $(params.scan-image)
       - name: health-endpoint
