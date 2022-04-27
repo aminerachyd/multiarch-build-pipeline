@@ -11,6 +11,8 @@ echo "Enter the name of your user/organisation on your registry"
 read IMAGE_NAMESPACE
 echo "Enter the api server url for your x86 cluster"
 read X86_SERVER_URL
+echo "Enter the protocol where you want to check the health status of your application, should be either https or grpc"
+read HEALTH_PROTOCOL
 
 # Update pipeline name in the template pipeline
 sed s/PIPELINE_NAME/$PIPELINE_NAME/ local-cluster-pipelines/general-pipeline.template.yaml | oc apply -f -
@@ -22,5 +24,6 @@ tkn pipeline start $PIPELINE_NAME \
   --param image-server=$IMAGE_SERVER \
   --param image-namespace=$IMAGE_NAMESPACE \
   --param x86-server-url=$X86_SERVER_URL \
+  --param health-protocol=$HEALTH_PROTOCOL \
 
 # TODO Create webhook to trigger the pipeline on repo push event
