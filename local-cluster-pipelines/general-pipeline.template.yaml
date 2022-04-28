@@ -180,6 +180,15 @@ spec:
         kind: Task
         name: execute-remote-pipeline
     - name: manifest
+      params:
+        - name: image-server
+          value: $(params.image-server)
+        - name: image-namespace
+          value: $(params.image-namespace)
+        - name: image-repository
+          value: $(tasks.setup.results.app-name)
+        - name: image-tag
+          value: $(tasks.setup.results.image-tag)
       taskRef:
         kind: Task
         name: manifest

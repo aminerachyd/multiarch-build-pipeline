@@ -107,7 +107,7 @@ spec:
       securityContext:
         privileged: true
       script: |
-        APP_IMAGE="$(params.image-server)/$(params.image-namespace)/$(params.image-repository):$(params.image-tag)"
+        APP_IMAGE="$(params.image-server)/$(params.image-namespace)/$(params.image-repository):$(params.image-tag)_$(uname -m)"
         if [[ -n "${IBM_ENTITLED_REGISTRY_USER}" ]] && [[ -n "${IBM_ENTITLED_REGISTRY_PASSWORD}" ]]; then
           buildah login -u ${IBM_ENTITLED_REGISTRY_USER} -p ${IBM_ENTITLED_REGISTRY_PASSWORD} cp.icr.io
           echo "buildah login -u \"${IBM_ENTITLED_REGISTRY_USER}\" -p \"xxxxx\" cp.icr.io"
