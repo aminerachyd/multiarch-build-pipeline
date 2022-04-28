@@ -25,7 +25,7 @@ spec:
     - name: image-tag
       default: "latest"
     - name: BUILDER_IMAGE
-      default: quay.io/buildah/stable:v1.15.0
+      default: quay.io/buildah/stable:v1.18.0
     - name: DOCKERFILE
       default: ./Dockerfile
     - name: CONTEXT
@@ -48,7 +48,7 @@ spec:
         mountPath: $(params.source-dir)
   steps:
     - name: git-clone
-      image: quay.io/ibmgaragecloud/alpine-git
+      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.7.0-177
       env:
         - name: GIT_PASSWORD
           valueFrom:

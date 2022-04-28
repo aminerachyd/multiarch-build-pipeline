@@ -50,6 +50,7 @@ spec:
 
       oc login \
         --token "$OPENSHIFT_TOKEN" \
+        --insecure-skip-tls-verify \
         "$(params.openshift-server-url)"
 
       PIPELINERUN=$(
