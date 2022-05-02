@@ -288,27 +288,28 @@ spec:
       taskRef:
         kind: Task
         name: ibm-img-scan-v2-7-7
-    - name: helm-release
-      params:
-        - name: git-url
-          value: $(tasks.setup.results.git-url)
-        - name: git-revision
-          value: $(tasks.setup.results.git-revision)
-        - name: source-dir
-          value: $(tasks.setup.results.source-dir)
-        - name: image-url
-          value: $(tasks.img-release.results.image-url)
-        - name: app-name
-          value: $(tasks.setup.results.app-name)
-        - name: deploy-ingress-type
-          value: $(tasks.setup.results.deploy-ingress-type)
-        - name: tools-image
-          value: $(tasks.setup.results.tools-image)
-      runAfter:
-        - img-scan
-      taskRef:
-        kind: Task
-        name: ibm-helm-release-v2-7-7
+   # TODO enable step when toolkit is installed
+   #- name: helm-release
+   #  params:
+   #    - name: git-url
+   #      value: $(tasks.setup.results.git-url)
+   #    - name: git-revision
+   #      value: $(tasks.setup.results.git-revision)
+   #    - name: source-dir
+   #      value: $(tasks.setup.results.source-dir)
+   #    - name: image-url
+   #      value: $(tasks.img-release.results.image-url)
+   #    - name: app-name
+   #      value: $(tasks.setup.results.app-name)
+   #    - name: deploy-ingress-type
+   #      value: $(tasks.setup.results.deploy-ingress-type)
+   #    - name: tools-image
+   #      value: $(tasks.setup.results.tools-image)
+   #  runAfter:
+   #    - img-scan
+   #  taskRef:
+   #    kind: Task
+   #    name: ibm-helm-release-v2-7-7
     - name: gitops
       params:
         - name: app-name
@@ -316,11 +317,12 @@ spec:
         - name: version
           value: $(tasks.tag-release.results.tag)
         - name: helm-url
-          value: $(tasks.helm-release.results.helm-url)
+          #value: $(tasks.helm-release.results.helm-url)
+          value: ""
         - name: tools-image
           value: $(tasks.setup.results.tools-image)
       runAfter:
-        - helm-release
+        - img-scan
       taskRef:
         kind: Task
         name: ibm-gitops-v2-7-7
