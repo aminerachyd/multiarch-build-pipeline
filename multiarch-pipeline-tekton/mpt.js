@@ -1,54 +1,144 @@
+#!/usr/bin/env node
+
+const { program } = require("commander");
+const { exec } = require("child_process");
+const fs = require("fs");
+
+program
+  .name("mpt")
+  .description(
+    "A CLI for launching multiarch build pipelines on Tekton across different clusters"
+  )
+  .version("0.0.1");
+
+program
+  .option("-a, --app-name <name>", "Name of the app")
+  .option("-g, --git-url <repo>", "Git repository of the app")
+  .option(
+    "-r, --image-registry <registry>",
+    "Image registry to store the images"
+  )
+  .option(
+    "-n, --namespace <namespace>",
+    "Name of the user/organisation on the registry"
+  )
+  .option(
+    "-h, --health-protocol <health-protocol>",
+    "Protocol to check the health of the app, either https or grpc"
+  )
+  .option("-x86, --build-on-x86", "Toggle build on x86 architecture")
+  .option("-power, --build-on-power", "Toggle build on IBM Power architecture")
+  .option("-z, --build-on-z", "Toggle build on IBM Z architecture")
+  .option("--api-server-x86 <api-server-x86-url>", "API server for x86 cluster")
+  .option(
+    "--api-server-power <api-server-power-url>",
+    "API server for power cluster"
+  )
+  .option("--api-server-z <api-server-z-url>", "API server for z cluster")
+  .parse(process.argv);
+
+const options = program.opts();
+if (
+  !options.appName ||
+  !options.gitUrl ||
+  !options.imageRegistry ||
+  !options.namespace ||
+  !options.healthProtocol
+) {
+  console.log("Please provide all the required options");
+  process.exit(1);
+}
+
+const pipelineName = options.appName + "-multiarch-pipeline";
+
+if (!options.buildOnX86 && !options.buildOnPower && !options.buildOnZ) {
+  console.log("Please provide atleast one build option");
+  process.exit(1);
+}
+
+if (!options.apiServerX86 && !options.apiServerPower && !options.apiServerZ) {
+  console.log("Please provide atleast one API server option");
+  process.exit(1);
+}
+
+if (options.buildOnX86 && !options.apiServerX86) {
+  console.log("Please provide the API server for x86 cluster");
+  process.exit(1);
+}
+
+if (options.buildOnPower && !options.apiServerPower) {
+  console.log("Please provide the API server for Power cluster");
+  process.exit(1);
+}
+
+if (options.buildOnZ && !options.apiServerZ) {
+  console.log("Please provide the API server for Z cluster");
+  process.exit(1);
+}
+
+const DO_BUILD_ON_X86 = options.buildOnX86 && options.apiServerX86;
+const DO_BUILD_ON_POWER = options.buildOnPower && options.apiServerPower;
+const DO_BUILD_ON_Z = options.buildOnZ && options.apiServerZ;
+
+let pipeline = `
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: PIPELINE_NAME
+  name: ${pipelineName}
 spec:
   params:
     - description: The url for the git repository
       name: git-url
-      type: string
     - default: master
       description: "The git revision (branch, tag, or sha) that should be built"
       name: git-revision
-      type: string
     - name: image-server
       description: "Image registry to store the image in"
-      type: string
     - name: image-namespace
       description: "Image namespace in the registry (user or organisation)"
-      type: string
     - default: "false"
       description: Enable the pipeline to scan the image for vulnerabilities
       name: scan-image
-      type: string
     - default: "false"
       description: Enable the pipeline to lint the Dockerfile for best practices
       name: lint-dockerfile
-      type: string
     - default: grpc
       description: >-
         Protocol to check health after deployment, either https or grpc,
         defaults to https
       name: health-protocol
-      type: string
     - default: /
       description: "Endpoint to check health after deployment, defaults /"
       name: health-endpoint
-      type: string
+    ${
+      options.buildOnX86
+        ? `
     - name: x86-server-url
       description: "X86 cluster API server for multiarch build"
-      type: string
+     `
+        : ""
+    }
+    ${
+      options.buildOnPower
+        ? `
     - name: power-server-url
       description: "Power cluster API server for multiarch build"
-      type: string
+     `
+        : ""
+    }
+    ${
+      options.buildOnZ
+        ? `
     - name: z-server-url
       description: "Z cluster API server for multiarch build"
-      type: string
+     `
+        : ""
+    }
   tasks:
     - name: setup
       params:
         - name: git-url
-          value: $(params.git-url)
+          value: \$(params.git-url)
         - name: git-revision
           value: $(params.git-revision)
         - name: image-server
@@ -66,37 +156,10 @@ spec:
       taskRef:
         kind: Task
         name: ibm-setup-v2-7-8
-    # TODO - add tasks of cloud native toolkit
-    # - name: code-lint
-    #   params:
-    #     - name: git-url
-    #       value: $(tasks.setup.results.git-url)
-    #     - name: git-revision
-    #       value: $(tasks.setup.results.git-revision)
-    #     - name: source-dir
-    #       value: $(tasks.setup.results.source-dir)
-    #     - name: app-name
-    #       value: $(tasks.setup.results.app-name)
-    #   runAfter:
-    #     - setup
-    #   taskRef:
-    #     kind: Task
-    #     name: ibm-sonar-test-v2-7-7
-    # - name: dockerfile-lint
-    #   params:
-    #     - name: git-url
-    #       value: $(tasks.setup.results.git-url)
-    #     - name: git-revision
-    #       value: $(tasks.setup.results.git-revision)
-    #     - name: source-dir
-    #       value: $(tasks.setup.results.source-dir)
-    #     - name: lint-dockerfile
-    #       value: $(tasks.setup.results.dockerfile-lint)
-    #   runAfter:
-    #     - code-lint
-    #   taskRef:
-    #     kind: Task
-    #     name: ibm-dockerfile-lint-v2-7-7
+  # TODO - add tasks of cloud native toolkit (code-lint and dockerfile-lint)
+    ${
+      options.buildOnX86
+        ? `
     - name: build-x86
       params:
         - name: git-url
@@ -124,6 +187,12 @@ spec:
       taskRef:
         kind: Task
         name: execute-remote-pipeline
+      `
+        : ""
+    }
+    ${
+      options.buildOnPower
+        ? `
     - name: build-power
       params:
         - name: git-url
@@ -151,6 +220,12 @@ spec:
       taskRef:
         kind: Task
         name: execute-remote-pipeline
+      `
+        : ""
+    }
+    ${
+      options.buildOnZ
+        ? `
     - name: build-z
       params:
         - name: git-url
@@ -178,6 +253,9 @@ spec:
       taskRef:
         kind: Task
         name: execute-remote-pipeline
+      `
+        : ""
+    }
     - name: manifest
       params:
         - name: image-server
@@ -190,11 +268,11 @@ spec:
           value: $(tasks.setup.results.image-tag)
       taskRef:
         kind: Task
-        name: manifest
+        name: manifest-${options.appName}
       runAfter:
-        - build-x86
-        - build-z
-        - build-power
+        ${options.buildOnX86 ? `- build-x86` : ""}
+        ${options.buildOnPower ? `- build-power` : ""}
+        ${options.buildOnZ ? `- build-z` : ""}
     - name: deploy
       params:
         - name: git-url
@@ -287,28 +365,28 @@ spec:
       taskRef:
         kind: Task
         name: ibm-img-scan-v2-7-7
-    # TODO enable step when toolkit is installed
-    #- name: helm-release
-    #  params:
-    #    - name: git-url
-    #      value: $(tasks.setup.results.git-url)
-    #    - name: git-revision
-    #      value: $(tasks.setup.results.git-revision)
-    #    - name: source-dir
-    #      value: $(tasks.setup.results.source-dir)
-    #    - name: image-url
-    #      value: $(tasks.img-release.results.image-url)
-    #    - name: app-name
-    #      value: $(tasks.setup.results.app-name)
-    #    - name: deploy-ingress-type
-    #      value: $(tasks.setup.results.deploy-ingress-type)
-    #    - name: tools-image
-    #      value: $(tasks.setup.results.tools-image)
-    #  runAfter:
-    #    - img-scan
-    #  taskRef:
-    #    kind: Task
-    #    name: ibm-helm-release-v2-7-7
+    # TODO - add helm task to deploy to artifactory
+    - name: helm-release
+      params:
+        - name: git-url
+          value: $(tasks.setup.results.git-url)
+        - name: git-revision
+          value: $(tasks.setup.results.git-revision)
+        - name: source-dir
+          value: $(tasks.setup.results.source-dir)
+        - name: image-url
+          value: $(tasks.img-release.results.image-url)
+        - name: app-name
+          value: $(tasks.setup.results.app-name)
+        - name: deploy-ingress-type
+          value: $(tasks.setup.results.deploy-ingress-type)
+        - name: tools-image
+          value: $(tasks.setup.results.tools-image)
+      runAfter:
+        - img-scan
+      taskRef:
+        kind: Task
+        name: ibm-helm-release-v2-7-7
     - name: gitops
       params:
         - name: app-name
@@ -316,12 +394,134 @@ spec:
         - name: version
           value: $(tasks.tag-release.results.tag)
         - name: helm-url
-          #value: $(tasks.helm-release.results.helm-url)
-          value: ""
+          value: $(tasks.helm-release.results.helm-url)
         - name: tools-image
           value: $(tasks.setup.results.tools-image)
       runAfter:
-        - img-scan
+        - helm-release
       taskRef:
         kind: Task
         name: ibm-gitops-v2-7-7
+`;
+
+let manifest = `
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: manifest-${options.appName}
+spec:
+  params:
+    - name: image-server
+      default: "quay.io"
+    - name: image-tag
+      default: "latest"
+    - name: image-namespace
+    - name: image-repository
+  steps:
+  - name: build-step
+    env:
+      - name: REGISTRY_USER
+        valueFrom:
+          secretKeyRef:
+            name: registry-access
+            key: REGISTRY_USER
+            optional: true
+      - name: REGISTRY_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: registry-access
+            key: REGISTRY_PASSWORD
+            optional: true
+    image: quay.io/buildah/stable:v1.18.0
+    script: |
+      APP_IMAGE="$(params.image-server)/$(params.image-namespace)/$(params.image-repository):$(params.image-tag)"
+      X86_APP_IMAGE="$\{APP_IMAGE\}_x86_64"
+      POWER_APP_IMAGE="$\{APP_IMAGE\}_ppc64le"
+      Z_APP_IMAGE="$\{APP_IMAGE\}_s390x"
+
+      buildah login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" "$(params.image-server)"
+      echo "buildah login -u \"$REGISTRY_USER\" -p \"$REGISTRY_PASSWORD\" \"$(params.image-server)\""
+
+      buildah manifest create $APP_IMAGE
+
+      ${
+        options.buildOnX86
+          ? "buildah manifest add $APP_IMAGE docker://$X86_APP_IMAGE"
+          : ""
+      }
+      ${
+        options.buildOnPower
+          ? "buildah manifest add $APP_IMAGE docker://$POWER_APP_IMAGE"
+          : ""
+      }
+      ${
+        options.buildOnZ
+          ? "buildah manifest add $APP_IMAGE docker://$Z_APP_IMAGE"
+          : ""
+      }
+
+      set -x
+      buildah manifest push --all $APP_IMAGE docker://$APP_IMAGE
+`;
+
+let pipelinePath = "";
+let taskPath = "";
+
+try {
+  // Create .mpt directory in user home directory
+  if (!fs.existsSync(`${process.env.HOME}/.mpt`)) {
+    // Create .mpt directory
+    fs.mkdirSync(`${process.env.HOME}/.mpt`);
+  }
+  if (!fs.existsSync(`${process.env.HOME}/.mpt/applied-pipelines`)) {
+    // Create .mpt directory
+    fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines`);
+  }
+  if (!fs.existsSync(`${process.env.HOME}/.mpt/applied-pipelines/tasks`)) {
+    // Create .mpt directory
+    fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines/tasks`);
+  }
+
+  pipelinePath = `${process.env.HOME}/.mpt/applied-pipelines/pipeline-to-apply-${options.appName}.yaml`;
+  taskPath = `${process.env.HOME}/.mpt/applied-pipelines/manifest-${options.appName}.yaml`;
+
+  fs.writeFileSync(pipelinePath, pipeline);
+  fs.writeFileSync(taskPath, manifest);
+} catch (e) {
+  console.log("Error writing pipeline/task files");
+  process.exit(1);
+}
+
+const applyPipelineCMD = `
+oc apply -f ${taskPath}
+oc apply -f ${pipelinePath}
+`;
+
+const runPipelineCMD = `
+tkn pipeline start ${pipelineName} --use-param-defaults ${
+  DO_BUILD_ON_X86 ? `--param x86-server-url=${options.apiServerX86}` : ""
+} ${
+  DO_BUILD_ON_POWER ? `--param power-server-url=${options.apiServerPower}` : ""
+} ${
+  DO_BUILD_ON_Z ? `--param z-server-url=${options.apiServerZ}` : ""
+} --param health-protocol=${options.healthProtocol} --param git-url=${
+  options.gitUrl
+} --param image-server=${options.imageRegistry} --param image-namespace=${
+  options.namespace
+}`;
+
+exec(applyPipelineCMD, { cwd: options.projectDir }, (err, stdout, stderr) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log(stdout);
+});
+
+exec(runPipelineCMD, { cwd: options.projectDir }, (err, stdout, stderr) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log(stdout);
+});

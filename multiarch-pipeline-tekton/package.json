@@ -1,0 +1,17 @@
+{
+  "name": "multiarch-pipeline-tekton",
+  "version": "1.0.0",
+  "description": "A CLI for launching multiarch build pipelines on Tekton across different clusters",
+  "main": "mpt.js",
+  "bin": {
+    "mpt": "./mpt.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Amine RACHYD",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^9.2.0"
+  }
+}
