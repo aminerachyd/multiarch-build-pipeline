@@ -160,6 +160,21 @@ spec:
     ${
       options.buildOnX86
         ? `
+    - name: tag-release
+      params:
+        - name: git-url
+          value: $(tasks.setup.results.git-url)
+        - name: git-revision
+          value: $(tasks.setup.results.git-revision)
+        - name: source-dir
+          value: $(tasks.setup.results.source-dir)
+        - name: js-image
+          value: $(tasks.setup.results.js-image)
+      runAfter:
+        - setup
+      taskRef:
+        kind: Task
+        name: ibm-tag-release-v2-7-7
     - name: build-x86
       params:
         - name: git-url
@@ -173,7 +188,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.setup.results.image-tag)
+          value: $(tasks.tag-release.results.tag)
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
@@ -183,7 +198,7 @@ spec:
         - name: openshift-token-secret
           value: builder-cluster-x86-secret
       runAfter:
-        - setup
+        - tag-release
       taskRef:
         kind: Task
         name: execute-remote-pipeline
@@ -206,7 +221,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.setup.results.image-tag)
+          value: $(tasks.tag-release.results.tag)
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
@@ -216,7 +231,7 @@ spec:
         - name: openshift-token-secret
           value: builder-cluster-power-secret
       runAfter:
-        - setup
+        - tag-release
       taskRef:
         kind: Task
         name: execute-remote-pipeline
@@ -239,7 +254,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.setup.results.image-tag)
+          value: $(tasks.tag-release.results.tag)
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
@@ -249,7 +264,7 @@ spec:
         - name: openshift-token-secret
           value: builder-cluster-z-secret
       runAfter:
-        - setup
+        - tag-release
       taskRef:
         kind: Task
         name: execute-remote-pipeline
@@ -265,7 +280,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.setup.results.image-tag)
+          value: $(tasks.tag-release.results.tag)
       taskRef:
         kind: Task
         name: manifest-${options.appName}
@@ -288,7 +303,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.image-repository)
         - name: image-tag
-          value: $(tasks.setup.results.image-tag)
+          value: $(tasks.tag-release.results.tag)
         - name: app-namespace
           value: $(tasks.setup.results.app-namespace)
         - name: app-name
@@ -325,43 +340,16 @@ spec:
       taskRef:
         kind: Task
         name: ibm-health-check-v2-7-8
-    - name: tag-release
-      params:
-        - name: git-url
-          value: $(tasks.setup.results.git-url)
-        - name: git-revision
-          value: $(tasks.setup.results.git-revision)
-        - name: source-dir
-          value: $(tasks.setup.results.source-dir)
-        - name: js-image
-          value: $(tasks.setup.results.js-image)
-      runAfter:
-        - health
-      taskRef:
-        kind: Task
-        name: ibm-tag-release-v2-7-7
-    - name: img-release
-      params:
-        - name: image-from
-          value: $(tasks.setup.results.image-url)
-        - name: image-to
-          value: >-
-            $(tasks.setup.results.image-release):$(tasks.tag-release.results.tag)
-      runAfter:
-        - tag-release
-      taskRef:
-        kind: Task
-        name: ibm-img-release-v2-7-7
     - name: img-scan
       params:
         - name: image-url
-          value: $(tasks.img-release.results.image-url)
+          value: $(tasks.setup.results.image-url):$(tasks.tag-release.results.tag)
         - name: scan-trivy
           value: $(tasks.setup.results.scan-trivy)
         - name: scan-ibm
           value: $(tasks.setup.results.scan-ibm)
       runAfter:
-        - img-release
+        - health
       taskRef:
         kind: Task
         name: ibm-img-scan-v2-7-7
@@ -375,7 +363,7 @@ spec:
         - name: source-dir
           value: $(tasks.setup.results.source-dir)
         - name: image-url
-          value: $(tasks.img-release.results.image-url)
+          value: $(tasks.setup.results.image-url):$(tasks.tag-release.results.tag)
         - name: app-name
           value: $(tasks.setup.results.app-name)
         - name: deploy-ingress-type
