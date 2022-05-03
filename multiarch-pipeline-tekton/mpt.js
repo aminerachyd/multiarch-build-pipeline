@@ -468,17 +468,13 @@ let pipelinePath = "";
 let taskPath = "";
 
 try {
-  // Create .mpt directory in user home directory
   if (!fs.existsSync(`${process.env.HOME}/.mpt`)) {
-    // Create .mpt directory
     fs.mkdirSync(`${process.env.HOME}/.mpt`);
   }
   if (!fs.existsSync(`${process.env.HOME}/.mpt/applied-pipelines`)) {
-    // Create .mpt directory
     fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines`);
   }
   if (!fs.existsSync(`${process.env.HOME}/.mpt/applied-pipelines/tasks`)) {
-    // Create .mpt directory
     fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines/tasks`);
   }
 
