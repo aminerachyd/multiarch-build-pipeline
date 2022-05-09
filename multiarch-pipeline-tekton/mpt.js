@@ -156,11 +156,46 @@ spec:
       taskRef:
         kind: Task
         name: ibm-setup-v2-7-8
-  # TODO - add tasks of cloud native toolkit (code-lint and dockerfile-lint)
+    - name: code-test
+      runAfter:
+        - setup
+      taskRef:
+        kind: Task
+        name: code-test
+    - name: code-lint
+      params:
+        - name: git-url
+          value: $(tasks.setup.results.git-url)
+        - name: git-revision
+          value: $(tasks.setup.results.git-revision)
+        - name: source-dir
+          value: $(tasks.setup.results.source-dir)
+        - name: app-name
+          value: $(tasks.setup.results.app-name)
+      runAfter:
+        - code-test
+      taskRef:
+        kind: Task
+        name: ibm-sonar-test-v2-7-7
+    - name: dockerfile-lint
+      params:
+        - name: git-url
+          value: $(tasks.setup.results.git-url)
+        - name: git-revision
+          value: $(tasks.setup.results.git-revision)
+        - name: source-dir
+          value: $(tasks.setup.results.source-dir)
+        - name: lint-dockerfile
+          value: $(tasks.setup.results.dockerfile-lint)
+      runAfter:
+        - code-lint
+      taskRef:
+        kind: Task
+        name: ibm-dockerfile-lint-v2-7-7
     ${
       options.buildOnX86
         ? `
-    - name: tag-release
+    - name: simver
       params:
         - name: git-url
           value: $(tasks.setup.results.git-url)
@@ -170,8 +205,10 @@ spec:
           value: $(tasks.setup.results.source-dir)
         - name: js-image
           value: $(tasks.setup.results.js-image)
+        - name: skip-push
+          value: "true"
       runAfter:
-        - setup
+        - dockerfile-lint
       taskRef:
         kind: Task
         name: ibm-tag-release-v2-7-7
@@ -188,7 +225,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.tag-release.results.tag)
+          value: $(tasks.simver.results.tag)
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
@@ -198,7 +235,7 @@ spec:
         - name: openshift-token-secret
           value: builder-cluster-x86-secret
       runAfter:
-        - tag-release
+        - simver
       taskRef:
         kind: Task
         name: execute-remote-pipeline
@@ -221,7 +258,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.tag-release.results.tag)
+          value: $(tasks.simver.results.tag)
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
@@ -231,7 +268,7 @@ spec:
         - name: openshift-token-secret
           value: builder-cluster-power-secret
       runAfter:
-        - tag-release
+        - simver
       taskRef:
         kind: Task
         name: execute-remote-pipeline
@@ -254,7 +291,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.tag-release.results.tag)
+          value: $(tasks.simver.results.tag)
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
@@ -264,7 +301,7 @@ spec:
         - name: openshift-token-secret
           value: builder-cluster-z-secret
       runAfter:
-        - tag-release
+        - simver
       taskRef:
         kind: Task
         name: execute-remote-pipeline
@@ -280,7 +317,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.app-name)
         - name: image-tag
-          value: $(tasks.tag-release.results.tag)
+          value: $(tasks.simver.results.tag)
       taskRef:
         kind: Task
         name: manifest-${options.appName}
@@ -303,7 +340,7 @@ spec:
         - name: image-repository
           value: $(tasks.setup.results.image-repository)
         - name: image-tag
-          value: $(tasks.tag-release.results.tag)
+          value: $(tasks.simver.results.tag)
         - name: app-namespace
           value: $(tasks.setup.results.app-namespace)
         - name: app-name
@@ -343,7 +380,7 @@ spec:
     - name: img-scan
       params:
         - name: image-url
-          value: $(tasks.setup.results.image-url):$(tasks.tag-release.results.tag)
+          value: $(tasks.setup.results.image-url):$(tasks.simver.results.tag)
         - name: scan-trivy
           value: $(tasks.setup.results.scan-trivy)
         - name: scan-ibm
@@ -353,7 +390,21 @@ spec:
       taskRef:
         kind: Task
         name: ibm-img-scan-v2-7-7
-    # TODO - add helm task to deploy to artifactory
+    - name: tag-release
+      params:
+        - name: git-url
+          value: $(tasks.setup.results.git-url)
+        - name: git-revision
+          value: $(tasks.setup.results.git-revision)
+        - name: source-dir
+          value: $(tasks.setup.results.source-dir)
+        - name: js-image
+          value: $(tasks.setup.results.js-image)
+      runAfter:
+        - img-scan
+      taskRef:
+        kind: Task
+        name: ibm-tag-release-v2-7-7
     - name: helm-release
       params:
         - name: git-url
@@ -363,7 +414,7 @@ spec:
         - name: source-dir
           value: $(tasks.setup.results.source-dir)
         - name: image-url
-          value: $(tasks.setup.results.image-url):$(tasks.tag-release.results.tag)
+          value: $(tasks.setup.results.image-url):$(tasks.simver.results.tag)
         - name: app-name
           value: $(tasks.setup.results.app-name)
         - name: deploy-ingress-type
@@ -371,7 +422,7 @@ spec:
         - name: tools-image
           value: $(tasks.setup.results.tools-image)
       runAfter:
-        - img-scan
+        - tag-release
       taskRef:
         kind: Task
         name: ibm-helm-release-v2-7-7
@@ -380,7 +431,7 @@ spec:
         - name: app-name
           value: $(tasks.setup.results.app-name)
         - name: version
-          value: $(tasks.tag-release.results.tag)
+          value: $(tasks.simver.results.tag)
         - name: helm-url
           value: $(tasks.helm-release.results.helm-url)
         - name: tools-image
@@ -452,8 +503,22 @@ spec:
       buildah manifest push --all $APP_IMAGE docker://$APP_IMAGE
 `;
 
+let codeTest = `
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: code-test
+spec:
+  steps:
+  - name: test
+    image: quay.io/buildah/stable:v1.18.0
+    script: |
+      echo "Mock code test task"
+`;
+
 let pipelinePath = "";
-let taskPath = "";
+let manifestTaskPath = "";
+let codeTestTaskPath = "";
 
 try {
   if (!fs.existsSync(`${process.env.HOME}/.mpt`)) {
@@ -467,17 +532,20 @@ try {
   }
 
   pipelinePath = `${process.env.HOME}/.mpt/applied-pipelines/pipeline-to-apply-${options.appName}.yaml`;
-  taskPath = `${process.env.HOME}/.mpt/applied-pipelines/manifest-${options.appName}.yaml`;
+  manifestTaskPath = `${process.env.HOME}/.mpt/applied-pipelines/manifest-${options.appName}.yaml`;
+  codeTestTaskPath = `${process.env.HOME}/.mpt/applied-pipelines/code-test.yaml`;
 
   fs.writeFileSync(pipelinePath, pipeline);
-  fs.writeFileSync(taskPath, manifest);
+  fs.writeFileSync(manifestTaskPath, manifest);
+  fs.writeFileSync(codeTestTaskPath, codeTest);
 } catch (e) {
   console.log("Error writing pipeline/task files");
   process.exit(1);
 }
 
 const applyPipelineCMD = `
-oc apply -f ${taskPath}
+oc apply -f ${codeTestTaskPath}
+oc apply -f ${manifestTaskPath}
 oc apply -f ${pipelinePath}
 `;
 
