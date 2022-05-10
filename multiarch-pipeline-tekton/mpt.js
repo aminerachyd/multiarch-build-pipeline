@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 const { program } = require("commander");
-const { exec } = require("child_process");
 const createPipeline = require("./lib/createPipeline");
 const createManifestTask = require("./lib/createManifestTask");
 const createCodeTestTask = require("./lib/createCodeTestTask");
+const createPipelineTrigger = require("./lib/createPipelineTrigger");
 const fs = require("fs");
 
 program
@@ -90,9 +90,15 @@ try {
   if (!fs.existsSync(`${process.env.HOME}/.mpt/applied-pipelines/tasks`)) {
     fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines/tasks`);
   }
+  if (!fs.existsSync(`${process.env.HOME}/.mpt/applied-pipelines/triggers`)) {
+    fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines/triggers`);
+  }
+
   createCodeTestTask();
   createManifestTask(options);
   createPipeline({ pipelineName, ...options });
+
+  createPipelineTrigger({ pipelineName, ...options });
 } catch (e) {
   console.log("Error:", e);
   process.exit(1);
