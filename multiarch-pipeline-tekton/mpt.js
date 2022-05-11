@@ -26,6 +26,10 @@ program
     "Name of the user/organisation on the registry"
   )
   .option(
+    "-bn, --build-namespace <build-namespace>",
+    "Name of the namespace on the builder clusters on which you want to build your images"
+  )
+  .option(
     "-h, --health-protocol <health-protocol>",
     "Protocol to check the health of the app, either https or grpc"
   )
@@ -47,6 +51,7 @@ if (
   !options.gitUrl ||
   !options.imageRegistry ||
   !options.namespace ||
+  !options.buildNamespace ||
   !options.healthProtocol
 ) {
   console.log("Please provide all the required options");

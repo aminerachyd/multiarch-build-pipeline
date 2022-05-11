@@ -11,6 +11,7 @@ module.exports = createPipeline = ({
   imageRegistry,
   healthProtocol,
   namespace,
+  buildNamespace,
   buildOnX86,
   buildOnPower,
   buildOnZ,
@@ -33,6 +34,8 @@ spec:
       description: "Image registry to store the image in"
     - name: image-namespace
       description: "Image namespace in the registry (user or organisation)"
+    - description: The namespace in the builder clusters on which you want to build your image
+      name: build-namespace
     - default: "false"
       description: Enable the pipeline to scan the image for vulnerabilities
       name: scan-image
@@ -199,7 +202,7 @@ spec:
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
-          value: multiarch-demo
+          value: $(params.build-namespace)
         - name: openshift-server-url
           value: $(params.power-server-url)
         - name: openshift-token-secret
@@ -403,7 +406,7 @@ spec:
     buildOnX86 ? `--param x86-server-url=${apiServerX86}` : ""
   } ${buildOnPower ? `--param power-server-url=${apiServerPower}` : ""} ${
     buildOnZ ? `--param z-server-url=${apiServerZ}` : ""
-  } --param health-protocol=${healthProtocol} --param git-url=${gitUrl} --param image-server=${imageRegistry} --param image-namespace=${namespace}`;
+  } --param health-protocol=${healthProtocol} --param git-url=${gitUrl} --param image-server=${imageRegistry} --param image-namespace=${namespace} --param build-namespace=${buildNamespace}`;
 
   exec(tknCommand, (err, stdout, stderr) => {
     if (err) {
