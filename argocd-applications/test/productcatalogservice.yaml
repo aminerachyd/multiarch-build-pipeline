@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: productcatalogservice-test
+  labels:
+    env: test
+spec:
+  destination:
+    name: diamond | s390x on-prem
+    namespace: multiarch-demo-test
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: productcatalogservice.namespaceToDeploy
+        value: multiarch-demo-test
+    path: productcatalogservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true

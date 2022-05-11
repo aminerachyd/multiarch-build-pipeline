@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: emailservice-test
+  labels:
+    env: test
+spec:
+  destination:
+    name: opal | ppc64le on-prem
+    namespace: multiarch-demo-test
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: emailservice.namespaceToDeploy
+        value: multiarch-demo-test
+    path: emailservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true

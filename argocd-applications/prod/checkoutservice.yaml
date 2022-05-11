@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: checkoutservice-prod
+  labels:
+    env: prod
+spec:
+  destination:
+    name: opal | ppc64le on-prem
+    namespace: multiarch-demo-prod
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: checkoutservice.namespaceToDeploy
+        value: multiarch-demo-prod
+    path: checkoutservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true
