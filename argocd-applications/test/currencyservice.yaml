@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: currencyservice-test
+  labels:
+    env: test
+spec:
+  destination:
+    name: topaz | x86 on-prem
+    namespace: multiarch-demo-test
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: currencyservice.namespaceToDeploy
+        value: multiarch-demo-test
+    path: currencyservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true

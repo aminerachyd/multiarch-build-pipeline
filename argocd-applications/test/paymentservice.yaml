@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: paymentservice-test
+  labels:
+    env: test
+spec:
+  destination:
+    name: diamond | s390x on-prem
+    namespace: multiarch-demo-test
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: paymentservice.namespaceToDeploy
+        value: multiarch-demo-test
+    path: paymentservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true

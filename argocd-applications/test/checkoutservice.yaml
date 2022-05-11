@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: checkoutservice-test
+  labels:
+    env: test
+spec:
+  destination:
+    name: diamond | s390x on-prem
+    namespace: multiarch-demo-test
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: checkoutservice.namespaceToDeploy
+        value: multiarch-demo-test
+    path: checkoutservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true

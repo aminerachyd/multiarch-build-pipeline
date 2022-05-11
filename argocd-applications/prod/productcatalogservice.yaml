@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: productcatalogservice-prod
+  labels:
+    env: prod
+spec:
+  destination:
+    name: diamond | s390x on-prem
+    namespace: multiarch-demo-prod
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: productcatalogservice.namespaceToDeploy
+        value: multiarch-demo-prod
+    path: productcatalogservice
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true
