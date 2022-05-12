@@ -6,7 +6,7 @@ metadata:
     env: prod
 spec:
   destination:
-    name: opal | ppc64le on-prem
+    name: diamond | s390x on-prem
     namespace: multiarch-demo-prod
   project: online-boutique
   source:

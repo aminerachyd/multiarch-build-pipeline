@@ -122,6 +122,8 @@ spec:
           }
           - name: health-protocol
             value: ${healthProtocol}
+          - name: build-namespace
+            value: ${buildNamespace}
         pipelineRef:
           name: ${pipelineName}
 `;
