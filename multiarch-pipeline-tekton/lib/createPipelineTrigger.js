@@ -27,6 +27,7 @@ module.exports = createPipelineTrigger = ({
   imageRegistry,
   healthProtocol,
   namespace,
+  buildNamespace,
   buildOnX86,
   buildOnPower,
   buildOnZ,
@@ -174,9 +175,9 @@ spec:
   }
 
   // Apply the files
-  const applyTriggerBinding = `oc apply -f ${triggerBindingPath}`;
-  const applyTriggerTemplate = `oc apply -f ${triggerTemplatePath}`;
-  const applyEventListener = `oc apply -f ${eventListenerPath}`;
+  const applyTriggerBinding = `oc apply -f ${triggerBindingPath} -n ${buildNamespace}`;
+  const applyTriggerTemplate = `oc apply -f ${triggerTemplatePath} -n ${buildNamespace}`;
+  const applyEventListener = `oc apply -f ${eventListenerPath} -n ${buildNamespace}`;
 
   exec(applyTriggerBinding, (err, stdout, stderr) => {
     if (err) {
@@ -186,44 +187,47 @@ spec:
   });
 
   // Check if the event listener exists on the cluster
-  exec(`oc get eventlistener event-listener -o json`, (err, stdout, stderr) => {
-    if (err) {
-      console.log("Event listener does not exist, creating one");
-      exec(applyEventListener, (err, stdout, stderr) => {
-        if (err) {
-          throw err;
-        }
-        console.log(stdout);
-      });
-    } else {
-      // Patch the event listener
-      console.log("Event listener exists, patching it");
-      const existingEventListener = JSON.parse(stdout);
-      const newTriggers = [
-        ...[...existingEventListener.spec.triggers].filter(
-          (trigger) => trigger.name !== `${namespace}-${appName}-master`
-        ),
-        ...pEventListener.spec.triggers,
-      ];
+  exec(
+    `oc get eventlistener event-listener -o json -n ${buildNamespace}`,
+    (err, stdout, stderr) => {
+      if (err) {
+        console.log("Event listener does not exist, creating one");
+        exec(applyEventListener, (err, stdout, stderr) => {
+          if (err) {
+            throw err;
+          }
+          console.log(stdout);
+        });
+      } else {
+        // Patch the event listener
+        console.log("Event listener exists, patching it");
+        const existingEventListener = JSON.parse(stdout);
+        const newTriggers = [
+          ...[...existingEventListener.spec.triggers].filter(
+            (trigger) => trigger.name !== `${namespace}-${appName}-master`
+          ),
+          ...pEventListener.spec.triggers,
+        ];
 
-      const newEventListener = {
-        ...existingEventListener,
-        spec: {
-          ...existingEventListener.spec,
-          triggers: newTriggers,
-        },
-      };
-      fs.writeFileSync(eventListenerPath, JSON.stringify(newEventListener));
-      const patchEventListener = `oc apply -f ${eventListenerPath}`;
-      // Create patch file with the new trigger
-      exec(patchEventListener, (err, stdout, stderr) => {
-        if (err) {
-          throw err;
-        }
-        console.log(stdout);
-      });
+        const newEventListener = {
+          ...existingEventListener,
+          spec: {
+            ...existingEventListener.spec,
+            triggers: newTriggers,
+          },
+        };
+        fs.writeFileSync(eventListenerPath, JSON.stringify(newEventListener));
+        const patchEventListener = `oc apply -f ${eventListenerPath} -n ${buildNamespace}`;
+        // Create patch file with the new trigger
+        exec(patchEventListener, (err, stdout, stderr) => {
+          if (err) {
+            throw err;
+          }
+          console.log(stdout);
+        });
+      }
     }
-  });
+  );
 
   exec(applyTriggerTemplate, (err, stdout, stderr) => {
     if (err) {

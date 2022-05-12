@@ -2,7 +2,7 @@ const { exec } = require("child_process");
 
 const fs = require("fs");
 
-module.exports = createCodeTestTask = () => {
+module.exports = createCodeTestTask = (buildNamespace) => {
   // Task template
   const codeTest = `
 apiVersion: tekton.dev/v1alpha1
@@ -27,7 +27,7 @@ spec:
   }
 
   // Apply the pipeline
-  const applyCommand = `oc apply -f ${path}`;
+  const applyCommand = `oc apply -f ${path} -n ${buildNamespace}`;
   exec(applyCommand, (err, stdout, stderr) => {
     if (err) {
       throw err;

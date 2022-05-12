@@ -1,0 +1,127 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    app.openshift.io/description: Tags the git repository and releases the intermediate
+      container image with the version tag
+    app.openshift.io/vcs-ref: master
+    app.openshift.io/vcs-uri: https://github.com/IBM/ibm-garage-tekton-tasks
+    description: Tags the git repository and releases the intermediate container image
+      with the version tag
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"app.openshift.io/description":"Tags the git repository and releases the intermediate container image with the version tag","app.openshift.io/vcs-ref":"master","app.openshift.io/vcs-uri":"https://github.com/IBM/ibm-garage-tekton-tasks","description":"Tags the git repository and releases the intermediate container image with the version tag"},"labels":{"version":"2.7.7"},"name":"ibm-img-release-v2-7-7","namespace":"tools"},"spec":{"params":[{"default":"","name":"image-from"},{"default":"","name":"image-to"},{"default":"quay.io/containers/skopeo:v1.1.0","name":"SKOPEO_IMAGE"},{"default":"true","name":"IMAGE_FROM_TLS_VERIFY"},{"default":"true","name":"IMAGE_TO_TLS_VERIFY"}],"results":[{"description":"The url of the image to be pushed","name":"image-url"}],"steps":[{"env":[{"name":"REGISTRY_USER","valueFrom":{"secretKeyRef":{"key":"REGISTRY_USER","name":"registry-access","optional":true}}},{"name":"REGISTRY_PASSWORD","valueFrom":{"secretKeyRef":{"key":"REGISTRY_PASSWORD","name":"registry-access","optional":true}}},{"name":"VAULT_INSTANCE_ID","valueFrom":{"secretKeyRef":{"key":"vault-instance-id","name":"portieris-keys","optional":true}}},{"name":"VAULT_KEY_ID","valueFrom":{"secretKeyRef":{"key":"vault-key-id","name":"portieris-keys","optional":true}}},{"name":"VAULT_URL","valueFrom":{"secretKeyRef":{"key":"vault-url","name":"portieris-keys","optional":true}}},{"name":"SIGNATURE_FINGERPRINT","valueFrom":{"secretKeyRef":{"key":"portieris-signature-fingerprint","name":"portieris-keys","optional":true}}},{"name":"IBM_CLOUD_APIKEY","valueFrom":{"secretKeyRef":{"key":"APIKEY","name":"ibmcloud-apikey","optional":true}}}],"image":"$(params.SKOPEO_IMAGE)","name":"image-tag","script":"IMAGE_FROM=\"$(params.image-from)\"\nREGISTRY_SERVER_FROM=$(echo \"${IMAGE_FROM}\" | awk -F / '{print $1}')\nIMAGE_TO=\"$(params.image-to)\"\nREGISTRY_SERVER_TO=$(echo \"${IMAGE_TO}\" | awk -F / '{print $1}')\nIMAGE_FROM_TLS_VERIFY=$(params.IMAGE_FROM_TLS_VERIFY)\nIMAGE_TO_TLS_VERIFY=$(params.IMAGE_TO_TLS_VERIFY)\n\necho \"Tagging ${IMAGE_FROM} as ${IMAGE_TO}\"\nset +x\nif [[ -n \"${REGISTRY_USER}\" ]] \u0026\u0026 [[ -n \"${REGISTRY_PASSWORD}\" ]] \u0026\u0026 [[ ! \"${REGISTRY_SERVER_FROM}\" =~ \":\" ]]; then\n  IMAGE_FROM_CREDS=\"--src-creds ${REGISTRY_USER}:${REGISTRY_PASSWORD}\"\nfi\nif [[ -n \"${REGISTRY_USER}\" ]] \u0026\u0026 [[ -n \"${REGISTRY_PASSWORD}\" ]] \u0026\u0026 [[ ! \"${REGISTRY_SERVER_TO}\" =~ \":\" ]]; then\n  IMAGE_TO_CREDS=\"--dest-creds ${REGISTRY_USER}:${REGISTRY_PASSWORD}\"\nfi\n\nif [[ \"${REGISTRY_SERVER_FROM}\" =~ \":\" ]]; then\n  IMAGE_FROM_TLS_VERIFY=\"false\"\nfi\nif [[ \"${REGISTRY_SERVER_TO}\" =~ \":\" ]]; then\n  IMAGE_TO_TLS_VERIFY=\"false\"\nfi\n\n\nSIGNING_PARAMETERS=\"\"\nif [[ -n \"$SIGNATURE_FINGERPRINT\" ]] ; then\n\n  echo \"Image signing parameters found.  Attempting to sign the image.\"\n  SIGNING_PARAMETERS=\"--insecure-policy --sign-by $SIGNATURE_FINGERPRINT\"\n\n  yum install jq -y\n\n  echo \"Getting IAM Token\"\n  curl -s -o token.txt \\\n    -X POST \"https://iam.cloud.ibm.com/identity/token\" \\\n    --header \"Content-Type: application/x-www-form-urlencoded\" \\\n    --header \"Accept: application/json\"  \\\n    --data-urlencode \"grant_type=urn:ibm:params:oauth:grant-type:apikey\" \\\n    --data-urlencode \"apikey=${IBM_CLOUD_APIKEY}\"\n\n  IAM_TOKEN=$(jq \".access_token\" -r token.txt)\n\n  echo \"Getting private key from keystore for image signing\"\n  curl -s -o payload \\\n    \"${VAULT_URL}/api/v2/keys/${VAULT_KEY_ID}\" \\\n    -H \"Authorization: Bearer ${IAM_TOKEN}\"   \\\n    -H \"Content-Type: application/json\" \\\n    -H \"bluemix-instance: ${VAULT_INSTANCE_ID}\"\n\n  ENCODEDKEY=$(jq \".resources[0].payload\" -r payload)\n  echo $ENCODEDKEY \u003e encodedkey\n  base64 -d encodedkey \u003e decodedkey\n\n  echo \"Importing key\"\n  gpg --import decodedkey\n\n  #remove the default signature policy, which will keep the signature local instead of uploading it to the registry\n  rm -f /etc/containers/registries.d/default.yaml\nfi\n\necho \"skopeo $SIGNING_PARAMETERS copy --src-tls-verify=${IMAGE_FROM_TLS_VERIFY} --dest-tls-verify=${IMAGE_TO_TLS_VERIFY} docker://${IMAGE_FROM} docker://${IMAGE_TO}\"\nCOMMAND=\"skopeo $SIGNING_PARAMETERS copy ${IMAGE_FROM_CREDS} --src-tls-verify=${IMAGE_FROM_TLS_VERIFY} ${IMAGE_TO_CREDS} --dest-tls-verify=${IMAGE_TO_TLS_VERIFY} docker://${IMAGE_FROM} docker://${IMAGE_TO}\"\n${COMMAND}\n\necho -n \"${IMAGE_TO}\" | tee $(results.image-url.path)\n\n\nif [[ -n \"$SIGNATURE_FINGERPRINT\" ]] ; then \n\n  # cleanup image signing artifacts\n  rm -f token.txt\n  rm -f payload\n  rm -f encodedkey\n  rm -f decodedkey\n  rm -rf /tekton/home/.gnupg\nfi\n","securityContext":{"privileged":true},"volumeMounts":[{"mountPath":"/var/lib/containers","name":"varlibcontainers"}]}],"volumes":[{"emptyDir":{},"name":"varlibcontainers"}]}}
+  creationTimestamp: "2022-04-26T09:49:11Z"
+  generation: 1
+  labels:
+    version: 2.7.7
+  name: ibm-img-release-v2-7-7
+  resourceVersion: "137872724"
+  uid: b8b85c72-cb86-4300-ac7f-6a5f2b78ae11
+spec:
+  params:
+  - default: ""
+    name: image-from
+    type: string
+  - default: ""
+    name: image-to
+    type: string
+  - default: quay.io/containers/skopeo:v1.1.0
+    name: SKOPEO_IMAGE
+    type: string
+  - default: "true"
+    name: IMAGE_FROM_TLS_VERIFY
+    type: string
+  - default: "true"
+    name: IMAGE_TO_TLS_VERIFY
+    type: string
+  results:
+  - description: The url of the image to be pushed
+    name: image-url
+  steps:
+  - env:
+    - name: REGISTRY_USER
+      valueFrom:
+        secretKeyRef:
+          key: REGISTRY_USER
+          name: registry-access
+          optional: true
+    - name: REGISTRY_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: REGISTRY_PASSWORD
+          name: registry-access
+          optional: true
+    - name: VAULT_INSTANCE_ID
+      valueFrom:
+        secretKeyRef:
+          key: vault-instance-id
+          name: portieris-keys
+          optional: true
+    - name: VAULT_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          key: vault-key-id
+          name: portieris-keys
+          optional: true
+    - name: VAULT_URL
+      valueFrom:
+        secretKeyRef:
+          key: vault-url
+          name: portieris-keys
+          optional: true
+    - name: SIGNATURE_FINGERPRINT
+      valueFrom:
+        secretKeyRef:
+          key: portieris-signature-fingerprint
+          name: portieris-keys
+          optional: true
+    - name: IBM_CLOUD_APIKEY
+      valueFrom:
+        secretKeyRef:
+          key: APIKEY
+          name: ibmcloud-apikey
+          optional: true
+    image: $(params.SKOPEO_IMAGE)
+    name: image-tag
+    resources: {}
+    script: "IMAGE_FROM=\"$(params.image-from)\"\nREGISTRY_SERVER_FROM=$(echo \"${IMAGE_FROM}\"
+      | awk -F / '{print $1}')\nIMAGE_TO=\"$(params.image-to)\"\nREGISTRY_SERVER_TO=$(echo
+      \"${IMAGE_TO}\" | awk -F / '{print $1}')\nIMAGE_FROM_TLS_VERIFY=$(params.IMAGE_FROM_TLS_VERIFY)\nIMAGE_TO_TLS_VERIFY=$(params.IMAGE_TO_TLS_VERIFY)\n\necho
+      \"Tagging ${IMAGE_FROM} as ${IMAGE_TO}\"\nset +x\nif [[ -n \"${REGISTRY_USER}\"
+      ]] && [[ -n \"${REGISTRY_PASSWORD}\" ]] && [[ ! \"${REGISTRY_SERVER_FROM}\"
+      =~ \":\" ]]; then\n  IMAGE_FROM_CREDS=\"--src-creds ${REGISTRY_USER}:${REGISTRY_PASSWORD}\"\nfi\nif
+      [[ -n \"${REGISTRY_USER}\" ]] && [[ -n \"${REGISTRY_PASSWORD}\" ]] && [[ ! \"${REGISTRY_SERVER_TO}\"
+      =~ \":\" ]]; then\n  IMAGE_TO_CREDS=\"--dest-creds ${REGISTRY_USER}:${REGISTRY_PASSWORD}\"\nfi\n\nif
+      [[ \"${REGISTRY_SERVER_FROM}\" =~ \":\" ]]; then\n  IMAGE_FROM_TLS_VERIFY=\"false\"\nfi\nif
+      [[ \"${REGISTRY_SERVER_TO}\" =~ \":\" ]]; then\n  IMAGE_TO_TLS_VERIFY=\"false\"\nfi\n\n\nSIGNING_PARAMETERS=\"\"\nif
+      [[ -n \"$SIGNATURE_FINGERPRINT\" ]] ; then\n\n  echo \"Image signing parameters
+      found.  Attempting to sign the image.\"\n  SIGNING_PARAMETERS=\"--insecure-policy
+      --sign-by $SIGNATURE_FINGERPRINT\"\n\n  yum install jq -y\n\n  echo \"Getting
+      IAM Token\"\n  curl -s -o token.txt \\\n    -X POST \"https://iam.cloud.ibm.com/identity/token\"
+      \\\n    --header \"Content-Type: application/x-www-form-urlencoded\" \\\n    --header
+      \"Accept: application/json\"  \\\n    --data-urlencode \"grant_type=urn:ibm:params:oauth:grant-type:apikey\"
+      \\\n    --data-urlencode \"apikey=${IBM_CLOUD_APIKEY}\"\n\n  IAM_TOKEN=$(jq
+      \".access_token\" -r token.txt)\n\n  echo \"Getting private key from keystore
+      for image signing\"\n  curl -s -o payload \\\n    \"${VAULT_URL}/api/v2/keys/${VAULT_KEY_ID}\"
+      \\\n    -H \"Authorization: Bearer ${IAM_TOKEN}\"   \\\n    -H \"Content-Type:
+      application/json\" \\\n    -H \"bluemix-instance: ${VAULT_INSTANCE_ID}\"\n\n
+      \ ENCODEDKEY=$(jq \".resources[0].payload\" -r payload)\n  echo $ENCODEDKEY
+      > encodedkey\n  base64 -d encodedkey > decodedkey\n\n  echo \"Importing key\"\n
+      \ gpg --import decodedkey\n\n  #remove the default signature policy, which will
+      keep the signature local instead of uploading it to the registry\n  rm -f /etc/containers/registries.d/default.yaml\nfi\n\necho
+      \"skopeo $SIGNING_PARAMETERS copy --src-tls-verify=${IMAGE_FROM_TLS_VERIFY}
+      --dest-tls-verify=${IMAGE_TO_TLS_VERIFY} docker://${IMAGE_FROM} docker://${IMAGE_TO}\"\nCOMMAND=\"skopeo
+      $SIGNING_PARAMETERS copy ${IMAGE_FROM_CREDS} --src-tls-verify=${IMAGE_FROM_TLS_VERIFY}
+      ${IMAGE_TO_CREDS} --dest-tls-verify=${IMAGE_TO_TLS_VERIFY} docker://${IMAGE_FROM}
+      docker://${IMAGE_TO}\"\n${COMMAND}\n\necho -n \"${IMAGE_TO}\" | tee $(results.image-url.path)\n\n\nif
+      [[ -n \"$SIGNATURE_FINGERPRINT\" ]] ; then \n\n  # cleanup image signing artifacts\n
+      \ rm -f token.txt\n  rm -f payload\n  rm -f encodedkey\n  rm -f decodedkey\n
+      \ rm -rf /tekton/home/.gnupg\nfi\n"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/lib/containers
+      name: varlibcontainers
+  volumes:
+  - emptyDir: {}
+    name: varlibcontainers

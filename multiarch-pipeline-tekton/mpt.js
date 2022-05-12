@@ -99,7 +99,7 @@ try {
     fs.mkdirSync(`${process.env.HOME}/.mpt/applied-pipelines/triggers`);
   }
 
-  createCodeTestTask();
+  createCodeTestTask(options.buildNamespace);
   createManifestTask(options);
   createPipeline({ pipelineName, ...options });
 

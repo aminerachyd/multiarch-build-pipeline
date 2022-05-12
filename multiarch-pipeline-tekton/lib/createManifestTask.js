@@ -6,6 +6,7 @@ module.exports = createManifestTask = ({
   buildOnX86,
   buildOnPower,
   buildOnZ,
+  buildNamespace,
   appName,
 }) => {
   // Task template
@@ -75,7 +76,7 @@ spec:
   }
 
   // Apply the pipeline
-  const applyCommand = `oc apply -f ${path}`;
+  const applyCommand = `oc apply -f ${path} -n ${buildNamespace}`;
   exec(applyCommand, (err, stdout, stderr) => {
     if (err) {
       throw err;

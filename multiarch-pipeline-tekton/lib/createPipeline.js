@@ -169,7 +169,7 @@ spec:
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
-          value: multiarch-demo
+          value: $(params.build-namespace)
         - name: openshift-server-url
           value: $(params.x86-server-url)
         - name: openshift-token-secret
@@ -235,7 +235,7 @@ spec:
         - name: pipeline-name
           value: build-push
         - name: pipeline-namespace
-          value: multiarch-demo
+          value: $(params.build-namespace)
         - name: openshift-server-url
           value: $(params.z-server-url)
         - name: openshift-token-secret
@@ -361,6 +361,8 @@ spec:
           value: $(tasks.setup.results.deploy-ingress-type)
         - name: tools-image
           value: $(tasks.setup.results.tools-image)
+        - name: image-tag
+          value: $(tasks.simver.results.tag)
       runAfter:
         - tag-release
       taskRef:
@@ -386,32 +388,36 @@ spec:
   // Create the pipeline file and write it to the directory
   const path = `${process.env.HOME}/.mpt/applied-pipelines/pipeline-to-apply-${appName}.yaml`;
   try {
-    fs.writeFileSync(path, pipeline);
+    fs.writeFile(path, pipeline, (err) => {
+      if (err) {
+        throw err;
+      }
+    });
   } catch (error) {
     const errmsg = `Failed to write pipeline file: ${error}`;
     throw new Error(errmsg);
   }
 
-  // Apply the pipeline
-  const applyCommand = `oc apply -f ${path}`;
+  // Apply the pipeline command
+  const applyCommand = `oc apply -f ${path} -n ${buildNamespace}`;
+  // Run the pipeline command
+  const tknCommand = `tkn pipeline start ${pipelineName} --use-param-defaults ${
+    buildOnX86 ? `--param x86-server-url=${apiServerX86}` : ""
+  } ${buildOnPower ? `--param power-server-url=${apiServerPower}` : ""} ${
+    buildOnZ ? `--param z-server-url=${apiServerZ}` : ""
+  } --param health-protocol=${healthProtocol} --param git-url=${gitUrl} --param image-server=${imageRegistry} --param image-namespace=${namespace} --param build-namespace=${buildNamespace} -n ${buildNamespace}`;
+
   exec(applyCommand, (err, stdout, stderr) => {
     if (err) {
       throw err;
     }
     console.log(stdout);
-  });
 
-  // Run the pipeline
-  const tknCommand = `tkn pipeline start ${pipelineName} --use-param-defaults ${
-    buildOnX86 ? `--param x86-server-url=${apiServerX86}` : ""
-  } ${buildOnPower ? `--param power-server-url=${apiServerPower}` : ""} ${
-    buildOnZ ? `--param z-server-url=${apiServerZ}` : ""
-  } --param health-protocol=${healthProtocol} --param git-url=${gitUrl} --param image-server=${imageRegistry} --param image-namespace=${namespace} --param build-namespace=${buildNamespace}`;
-
-  exec(tknCommand, (err, stdout, stderr) => {
-    if (err) {
-      throw err;
-    }
-    console.log(stdout);
+    exec(tknCommand, (err, stdout, stderr) => {
+      if (err) {
+        throw err;
+      }
+      console.log(stdout);
+    });
   });
 };
