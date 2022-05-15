@@ -6,7 +6,7 @@ metadata:
     env: test
 spec:
   destination:
-    name: opal | ppc64le on-prem
+    name: opal
     namespace: multiarch-demo-test
   project: online-boutique
   source:

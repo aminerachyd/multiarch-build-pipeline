@@ -6,7 +6,7 @@ metadata:
     env: prod
 spec:
   destination:
-    name: topaz | x86 on-prem
+    name: topaz
     namespace: multiarch-demo-prod
   project: online-boutique
   source:

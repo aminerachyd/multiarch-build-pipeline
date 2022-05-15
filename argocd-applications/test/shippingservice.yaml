@@ -6,7 +6,7 @@ metadata:
     env: test
 spec:
   destination:
-    name: topaz | x86 on-prem
+    name: topaz
     namespace: multiarch-demo-test
   project: online-boutique
   source:

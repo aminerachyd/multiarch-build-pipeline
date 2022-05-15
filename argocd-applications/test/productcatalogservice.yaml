@@ -6,7 +6,7 @@ metadata:
     env: test
 spec:
   destination:
-    name: diamond | s390x on-prem
+    name: diamond
     namespace: multiarch-demo-test
   project: online-boutique
   source:

@@ -85,7 +85,7 @@ spec:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       metadata: 
-        generateName: ${appName}-
+        generateName: ${appName}-multiarch-pipeline-run-
       spec:
         params:
           - name: git-url
@@ -143,7 +143,7 @@ spec:
               params: [
                 {
                   name: "filter",
-                  value: `header.match('X-GitHub-Event', 'push') && body.repository.full_name == '${namespace}/${appName}'`,
+                  value: `header.match('X-GitHub-Event', 'push') && body.ref == 'refs/heads/master' && body.repository.full_name == '${namespace}/${appName}'`,
                 },
                 {
                   name: "overlays",
