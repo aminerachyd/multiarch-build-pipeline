@@ -1,0 +1,23 @@
+# Prod app
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: online-boutique-app-of-apps-prod
+  labels:
+    env: prod
+    type: app-of-apps
+spec:
+  destination:
+    name: in-cluster
+    namespace: openshift-gitops
+  project: online-boutique
+  source:
+    path: argocd-applications/prod
+    repoURL: https://github.com/aminerachyd/multiarch-build-pipeline.git
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true
