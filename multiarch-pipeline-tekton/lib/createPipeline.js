@@ -320,7 +320,7 @@ spec:
     - name: img-scan
       params:
         - name: image-url
-          value: $(tasks.setup.results.image-url):$(tasks.simver.results.tag)
+          value: $(tasks.setup.results.image-server)/$(tasks.setup.results.image-namespace)/$(tasks.setup.results.image-repository):$(tasks.simver.results.tag)
         - name: scan-trivy
           value: $(tasks.setup.results.scan-trivy)
         - name: scan-ibm
@@ -405,7 +405,7 @@ spec:
     buildOnX86 ? `--param x86-server-url=${apiServerX86}` : ""
   } ${buildOnPower ? `--param power-server-url=${apiServerPower}` : ""} ${
     buildOnZ ? `--param z-server-url=${apiServerZ}` : ""
-  } --param health-protocol=${healthProtocol} --param git-url=${gitUrl} --param image-server=${imageRegistry} --param image-namespace=${namespace} --param build-namespace=${buildNamespace} -n ${buildNamespace}`;
+  } --param health-protocol=${healthProtocol} --param git-url=${gitUrl} --param image-server=${imageRegistry} --param image-namespace=${namespace} --param build-namespace=${buildNamespace} --param scan-image=false -n ${buildNamespace}`;
 
   exec(applyCommand, (err, stdout, stderr) => {
     if (err) {
