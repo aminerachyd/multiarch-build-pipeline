@@ -1,3 +1,2 @@
-variable "project-name" {
-
-}
+variable "project-name" {}
+variable "module-name" {}

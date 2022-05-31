@@ -105,7 +105,16 @@ resource "kubernetes_service_account" "pipeline-starter" {
   }
 }
 
-# Get token for pipeline starter service account
-output "pipeline-starter-token" {
-  value = kubernetes_service_account.pipeline-starter.secret
+# Get secret for pipeline starter service account
+data "kubernetes_secret" "pipeline-starter-secret" {
+  provider = kubernetes.cluster-context
+  metadata {
+    name      = kubernetes_service_account.pipeline-starter.default_secret_name
+    namespace = "${var.project-name}-dev"
+  }
+}
+
+resource "local_sensitive_file" "pipeline-starter-token-file" {
+  filename = "${path.module}/sa-token-${var.module-name}"
+  content  = data.kubernetes_secret.pipeline-starter-secret.data.token
 }
