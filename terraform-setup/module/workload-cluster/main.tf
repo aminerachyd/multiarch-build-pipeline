@@ -66,7 +66,7 @@ resource "kubernetes_cluster_role" "pipeline-starter" {
   }
   rule {
     api_groups = ["tekton.dev"]
-    resources  = ["pipelinereruns"]
+    resources  = ["pipelineruns"]
     verbs      = ["create", "get", "list", "watch"]
   }
   rule {
@@ -115,6 +115,39 @@ data "kubernetes_secret" "pipeline-starter-secret" {
 }
 
 resource "local_sensitive_file" "pipeline-starter-token-file" {
-  filename = "${path.module}/sa-token-${var.module-name}"
+  filename = "sa-token-${var.module-name}"
   content  = data.kubernetes_secret.pipeline-starter-secret.data.token
+}
+
+# TODO Add quay registry access secret
+resource "kubernetes_secret" "registry-access" {
+  provider = kubernetes.cluster-context
+  type     = "Opaque"
+  metadata {
+    name      = "registry-access"
+    namespace = kubernetes_namespace.dev-project.metadata[0].name
+  }
+  data = {
+    "REGISTRY_PASSWORD" = var.registry-token
+    "REGISTRY_USER"     = var.registry-user
+  }
+}
+
+resource "null_resource" "oc-sync" {
+  depends_on = [
+    kubernetes_namespace.dev-project,
+  ]
+  provisioner "local-exec" {
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
+  }
+}
+
+resource "null_resource" "oc-apply" {
+  depends_on = [
+    kubernetes_namespace.dev-project,
+    null_resource.oc-sync
+  ]
+  provisioner "local-exec" {
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/oc apply -f ./apply-on-builder-clusters  -n ${kubernetes_namespace.dev-project.metadata[0].name}"
+  }
 }

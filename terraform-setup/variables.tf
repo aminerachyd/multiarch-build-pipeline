@@ -21,3 +21,9 @@ variable "x86-cluster-token" {}
 variable "z-cluster-token" {}
 
 variable "power-cluster-token" {}
+
+### Image registry access
+
+variable "registry-user" {}
+
+variable "registry-token" {}
