@@ -173,7 +173,7 @@ spec:
         - name: openshift-server-url
           value: $(params.x86-server-url)
         - name: openshift-token-secret
-          value: builder-cluster-x86-secret
+          value: x86-cluster-secret
       runAfter:
         - simver
       taskRef:
@@ -206,7 +206,7 @@ spec:
         - name: openshift-server-url
           value: $(params.power-server-url)
         - name: openshift-token-secret
-          value: builder-cluster-power-secret
+          value: power-cluster-secret
       runAfter:
         - simver
       taskRef:
@@ -239,7 +239,7 @@ spec:
         - name: openshift-server-url
           value: $(params.z-server-url)
         - name: openshift-token-secret
-          value: builder-cluster-z-secret
+          value: z-cluster-secret
       runAfter:
         - simver
       taskRef:
