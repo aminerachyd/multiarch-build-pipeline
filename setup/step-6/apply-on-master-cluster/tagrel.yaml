@@ -2,122 +2,117 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   annotations:
-    app.openshift.io/description: Tags the git repository with the next version release
+    app.openshift.io/description:
+      Tags the git repository with the next version release
       value
     app.openshift.io/vcs-ref: master
     app.openshift.io/vcs-uri: https://github.com/IBM/ibm-garage-tekton-tasks
     description: Tags the git repository with the next version release value
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"app.openshift.io/description":"Tags the git repository with the next version release value","app.openshift.io/vcs-ref":"master","app.openshift.io/vcs-uri":"https://github.com/IBM/ibm-garage-tekton-tasks","description":"Tags the git repository with the next version release value"},"labels":{"version":"2.7.7"},"name":"ibm-tag-release-v2-7-7","namespace":"tools"},"spec":{"params":[{"name":"git-url"},{"default":"master","name":"git-revision"},{"default":"/source","name":"source-dir"},{"default":"","name":"skip-push"},{"default":"quay.io/ibmgaragecloud/node:lts-stretch","name":"js-image"}],"results":[{"name":"tag"}],"stepTemplate":{"volumeMounts":[{"mountPath":"$(params.source-dir)","name":"source"}]},"steps":[{"env":[{"name":"NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"GIT_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"git-credentials","optional":true}}},{"name":"GIT_USERNAME","valueFrom":{"secretKeyRef":{"key":"username","name":"git-credentials","optional":true}}}],"image":"quay.io/ibmgaragecloud/alpine-git","name":"git-clone","script":"set +x\nif [[ -n \"${GIT_USERNAME}\" ]] \u0026\u0026 [[ -n \"${GIT_PASSWORD}\" ]]; then\n    git clone \"$(echo $(params.git-url) | awk -F '://' '{print $1}')://${GIT_USERNAME}:${GIT_PASSWORD}@$(echo $(params.git-url) | awk -F '://' '{print $2}')\" $(params.source-dir)\nelse\n    set -x\n    git clone $(params.git-url) $(params.source-dir)\nfi\nset -x\ncd $(params.source-dir)\ngit checkout $(params.git-revision)\n# Need to create  branch to make release-it work\ngit switch -c local\n"},{"image":"$(params.js-image)","name":"git-tag","script":"#!/usr/bin/env bash\nset -ex\n\necho \"Current branch: $(git rev-parse --abbrev-ref HEAD)\"\ngit fetch --tags\ngit config --global user.email \"cloud-native-toolkit@example.com\"\ngit config --global user.name \"Cloud Native Toolkit Pipeline\"\nif [[ $(git describe --tag `git rev-parse HEAD`) =~ (^[0-9]+.[0-9]+.[0-9]+$) ]]; then\n    echo \"Latest commit is already tagged\"\n    NEW_TAG=\"$(git describe --abbrev=0 --tags)\"\n    echo -n \"${NEW_TAG}\" | tee $(results.tag.path)\n    exit 0\nfi\nmkdir -p ~/.npm\nnpm config set prefix ~/.npm\nexport PATH=$PATH:~/.npm/bin\nnpm i -g release-it\n\nrelease-it patch \\\n  --ci \\\n  --no-npm \\\n  --no-git.push \\\n  --no-git.requireCleanWorkingDir \\\n  --no-git.requireUpstream \\\n  -VV\n\nif [[ -z \"$(params.skip-push)\" ]]; then\n  set +x\n  git push --tags -v\n  set -x\nfi\n\nNEW_TAG=\"$(git describe --abbrev=0 --tags)\"\nif [[ -z \"${NEW_TAG}\" ]]; then\n    echo \"Error: NEW_TAG not defined\"\n    exit 1\nfi\necho -n \"${NEW_TAG}\" | tee $(results.tag.path)\n","workingDir":"$(params.source-dir)"}],"volumes":[{"emptyDir":{},"name":"source"}]}}
-  creationTimestamp: "2022-04-26T09:49:11Z"
-  generation: 1
   labels:
     version: 2.7.7
   name: ibm-tag-release-v2-7-7
-  resourceVersion: "137872736"
-  uid: 8b30979e-d6dd-49a9-ab00-78111ada2f06
 spec:
   params:
-  - name: git-url
-    type: string
-  - default: master
-    name: git-revision
-    type: string
-  - default: /source
-    name: source-dir
-    type: string
-  - default: ""
-    name: skip-push
-    type: string
-  - default: quay.io/ibmgaragecloud/node:lts-stretch
-    name: js-image
-    type: string
+    - name: git-url
+      type: string
+    - default: master
+      name: git-revision
+      type: string
+    - default: /source
+      name: source-dir
+      type: string
+    - default: ""
+      name: skip-push
+      type: string
+    - default: quay.io/ibmgaragecloud/node:lts-stretch
+      name: js-image
+      type: string
   results:
-  - description: ""
-    name: tag
+    - description: ""
+      name: tag
   stepTemplate:
     name: ""
     resources: {}
     volumeMounts:
-    - mountPath: $(params.source-dir)
-      name: source
+      - mountPath: $(params.source-dir)
+        name: source
   steps:
-  - env:
-    - name: NAMESPACE
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.namespace
-    - name: GIT_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          key: password
-          name: git-credentials
-          optional: true
-    - name: GIT_USERNAME
-      valueFrom:
-        secretKeyRef:
-          key: username
-          name: git-credentials
-          optional: true
-    image: quay.io/ibmgaragecloud/alpine-git
-    name: git-clone
-    resources: {}
-    script: |
-      set +x
-      if [[ -n "${GIT_USERNAME}" ]] && [[ -n "${GIT_PASSWORD}" ]]; then
-          git clone "$(echo $(params.git-url) | awk -F '://' '{print $1}')://${GIT_USERNAME}:${GIT_PASSWORD}@$(echo $(params.git-url) | awk -F '://' '{print $2}')" $(params.source-dir)
-      else
-          set -x
-          git clone $(params.git-url) $(params.source-dir)
-      fi
-      set -x
-      cd $(params.source-dir)
-      git checkout $(params.git-revision)
-      # Need to create  branch to make release-it work
-      git switch -c local
-  - image: $(params.js-image)
-    name: git-tag
-    resources: {}
-    script: |
-      #!/usr/bin/env bash
-      set -ex
-
-      echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
-      git fetch --tags
-      git config --global user.email "cloud-native-toolkit@example.com"
-      git config --global user.name "Cloud Native Toolkit Pipeline"
-      if [[ $(git describe --tag `git rev-parse HEAD`) =~ (^[0-9]+.[0-9]+.[0-9]+$) ]]; then
-          echo "Latest commit is already tagged"
-          NEW_TAG="$(git describe --abbrev=0 --tags)"
-          echo -n "${NEW_TAG}" | tee $(results.tag.path)
-          exit 0
-      fi
-      mkdir -p ~/.npm
-      npm config set prefix ~/.npm
-      export PATH=$PATH:~/.npm/bin
-      npm i -g release-it
-
-      release-it patch \
-        --ci \
-        --no-npm \
-        --no-git.push \
-        --no-git.requireCleanWorkingDir \
-        --no-git.requireUpstream \
-        -VV
-
-      if [[ -z "$(params.skip-push)" ]]; then
+    - env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: git-credentials
+              optional: true
+        - name: GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: git-credentials
+              optional: true
+      image: quay.io/ibmgaragecloud/alpine-git
+      name: git-clone
+      resources: {}
+      script: |
         set +x
-        git push --tags -v
+        if [[ -n "${GIT_USERNAME}" ]] && [[ -n "${GIT_PASSWORD}" ]]; then
+            git clone "$(echo $(params.git-url) | awk -F '://' '{print $1}')://${GIT_USERNAME}:${GIT_PASSWORD}@$(echo $(params.git-url) | awk -F '://' '{print $2}')" $(params.source-dir)
+        else
+            set -x
+            git clone $(params.git-url) $(params.source-dir)
+        fi
         set -x
-      fi
+        cd $(params.source-dir)
+        git checkout $(params.git-revision)
+        # Need to create  branch to make release-it work
+        git switch -c local
+    - image: $(params.js-image)
+      name: git-tag
+      resources: {}
+      script: |
+        #!/usr/bin/env bash
+        set -ex
 
-      NEW_TAG="$(git describe --abbrev=0 --tags)"
-      if [[ -z "${NEW_TAG}" ]]; then
-          echo "Error: NEW_TAG not defined"
-          exit 1
-      fi
-      echo -n "${NEW_TAG}" | tee $(results.tag.path)
-    workingDir: $(params.source-dir)
+        echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
+        git fetch --tags
+        git config --global user.email "cloud-native-toolkit@example.com"
+        git config --global user.name "Cloud Native Toolkit Pipeline"
+        if [[ $(git describe --tag `git rev-parse HEAD`) =~ (^[0-9]+.[0-9]+.[0-9]+$) ]]; then
+            echo "Latest commit is already tagged"
+            NEW_TAG="$(git describe --abbrev=0 --tags)"
+            echo -n "${NEW_TAG}" | tee $(results.tag.path)
+            exit 0
+        fi
+        mkdir -p ~/.npm
+        npm config set prefix ~/.npm
+        export PATH=$PATH:~/.npm/bin
+        npm i -g release-it
+
+        release-it patch \
+          --ci \
+          --no-npm \
+          --no-git.push \
+          --no-git.requireCleanWorkingDir \
+          --no-git.requireUpstream \
+          -VV
+
+        if [[ -z "$(params.skip-push)" ]]; then
+          set +x
+          git push --tags -v
+          set -x
+        fi
+
+        NEW_TAG="$(git describe --abbrev=0 --tags)"
+        if [[ -z "${NEW_TAG}" ]]; then
+            echo "Error: NEW_TAG not defined"
+            exit 1
+        fi
+        echo -n "${NEW_TAG}" | tee $(results.tag.path)
+      workingDir: $(params.source-dir)
   volumes:
-  - emptyDir: {}
-    name: source
+    - emptyDir: {}
+      name: source

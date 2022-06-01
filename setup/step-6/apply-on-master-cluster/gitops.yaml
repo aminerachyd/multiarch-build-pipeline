@@ -2,253 +2,250 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   annotations:
-    app.openshift.io/description: Publishes the helm chart configuration to the provided
+    app.openshift.io/description:
+      Publishes the helm chart configuration to the provided
       gitops repo to trigger downstream deployments
     app.openshift.io/vcs-ref: master
     app.openshift.io/vcs-uri: https://github.com/IBM/ibm-garage-tekton-tasks
-    description: Publishes the helm chart configuration to the provided gitops repo
+    description:
+      Publishes the helm chart configuration to the provided gitops repo
       to trigger downstream deployments
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"tekton.dev/v1beta1","kind":"Task","metadata":{"annotations":{"app.openshift.io/description":"Publishes the helm chart configuration to the provided gitops repo to trigger downstream deployments","app.openshift.io/vcs-ref":"master","app.openshift.io/vcs-uri":"https://github.com/IBM/ibm-garage-tekton-tasks","description":"Publishes the helm chart configuration to the provided gitops repo to trigger downstream deployments"},"labels":{"version":"2.7.7"},"name":"ibm-gitops-v2-7-7","namespace":"tools"},"spec":{"params":[{"default":"","name":"app-name"},{"default":"","name":"version"},{"default":"/source","name":"source-dir"},{"default":"","name":"subdir"},{"default":"","name":"parentdir"},{"default":"requirements.yaml","name":"yaml"},{"default":"","name":"helm-url"},{"default":"quay.io/ibmgaragecloud/ibmcloud-dev:v2.0.4","name":"tools-image"}],"stepTemplate":{"volumeMounts":[{"mountPath":"$(params.source-dir)","name":"source"}]},"steps":[{"env":[{"name":"NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"HOME","value":"/home/devops"},{"name":"GIT_USERNAME","valueFrom":{"secretKeyRef":{"key":"username","name":"git-credentials","optional":true}}},{"name":"GIT_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"git-credentials","optional":true}}},{"name":"GIT_USERNAME_CD","valueFrom":{"secretKeyRef":{"key":"username","name":"gitops-cd-secret","optional":true}}},{"name":"GIT_PASSWORD_CD","valueFrom":{"secretKeyRef":{"key":"password","name":"gitops-cd-secret","optional":true}}},{"name":"GIT_PARENT_DIR","valueFrom":{"configMapKeyRef":{"key":"parentdir","name":"gitops-repo","optional":true}}},{"name":"GIT_PARENT_DIR_SERVICES","valueFrom":{"configMapKeyRef":{"key":"parentdir-services","name":"gitops-repo","optional":true}}},{"name":"GIT_PROTOCOL","valueFrom":{"configMapKeyRef":{"key":"protocol","name":"gitops-repo","optional":true}}},{"name":"GIT_HOST","valueFrom":{"configMapKeyRef":{"key":"host","name":"gitops-repo","optional":true}}},{"name":"GIT_ORG","valueFrom":{"configMapKeyRef":{"key":"org","name":"gitops-repo","optional":true}}},{"name":"GIT_REPO","valueFrom":{"configMapKeyRef":{"key":"repo","name":"gitops-repo","optional":true}}},{"name":"GIT_BRANCH","valueFrom":{"configMapKeyRef":{"key":"branch","name":"gitops-repo","optional":true}}}],"image":"$(params.tools-image)","name":"gitops","script":"#!/usr/bin/env bash\nset -ex\n\nAPP_NAME=\"$(params.app-name)\"\nSUBDIR=\"$(params.subdir)\"\nif [[ -z \"${SUBDIR}\" ]]; then\n  SUBDIR=\"${APP_NAME}\"\nfi\nif [[ -n \"$(params.parentdir)\" ]]; then\n  PARENT_DIR=\"$(params.parentdir)\"\nelif [[ -n \"${GIT_PARENT_DIR_SERVICES}\" ]] \u0026\u0026 [[ \"${GIT_PARENT_DIR_SERVICES}\" = \"bash -c\"* ]]; then\n  PARENT_DIR=$(eval $GIT_PARENT_DIR_SERVICES | tail -n 1)\nelif [[ -n \"${GIT_PARENT_DIR_SERVICES}\" ]]; then\n  PARENT_DIR=\"${GIT_PARENT_DIR_SERVICES}\"\nelif [[ -n \"${GIT_PARENT_DIR}\" ]] \u0026\u0026 [[ \"${GIT_PARENT_DIR}\" = \"bash -c\"* ]]; then\n  PARENT_DIR=$(eval $GIT_PARENT_DIR | tail -n 1)\nelif [[ -n \"${GIT_PARENT_DIR}\" ]]; then\n  PARENT_DIR=\"${GIT_PARENT_DIR}\"\nelse\n  PARENT_DIR=\".\"\nfi\nSUBDIR=\"${PARENT_DIR}/${SUBDIR}\"\n\nPROTOCOL=\"${GIT_PROTOCOL}\"\nif [[ -z \"${PROTOCOL}\" ]]; then\n  PROTOCOL=\"https\"\nfi\n\nYAML_FILE=\"$(params.yaml)\"\nVERSION=\"$(params.version)\"\nHELM_URL=\"$(params.helm-url)\"\n\nif [[ -z \"${GIT_HOST}\" ]] || [[ -z \"${GIT_ORG}\" ]] || [[ -z \"${GIT_REPO}\" ]]; then\n    echo \"GitOps repo has not been configured with confimap gitops-repo. Skipping trigger step\"\n    exit 0\nfi\n\nset +x\nif [[ -n \"${GIT_USERNAME_CD}\" ]]; then\n  GIT_AUTH_USER=\"${GIT_USERNAME_CD}\"\n  GIT_AUTH_PWD=\"${GIT_PASSWORD_CD}\"\nelif [[ -n \"${GIT_USERNAME}\" ]]; then\n  GIT_AUTH_USER=\"${GIT_USERNAME}\"\n  GIT_AUTH_PWD=\"${GIT_PASSWORD}\"\nelse\n  echo \"Credentials for GitOps repo not set in secret gitops-cd-secret or git-credentials\"\n  exit 1\nfi\nset -x\n\nBRANCH_CMD=\"\"\nif [[ -n \"${GIT_BRANCH}\" ]]; then\n  BRANCH_CMD=\"-b ${GIT_BRANCH}\"\nfi\n\ngit config --global user.email \"gitops@cloudnativetoolkit.dev\"\ngit config --global user.name \"Cloud Native Toolkit Pipeline\"\necho \"git clone ${BRANCH_CMD} ${PROTOCOL}://${GIT_AUTH_USER}:xxxx@${GIT_HOST}/${GIT_ORG}/${GIT_REPO}\"\nset +x\nGIT_URL=\"${PROTOCOL}://${GIT_AUTH_USER}:${GIT_AUTH_PWD}@${GIT_HOST}/${GIT_ORG}/${GIT_REPO}\"\ngit clone ${BRANCH_CMD} ${GIT_URL} gitops_cd\nset -x\ncd gitops_cd\n\n\nif [[ -f \"${SUBDIR}/${YAML_FILE}\" ]]; then\n  echo \"Requirements before update\"\n  cat \"${SUBDIR}/${YAML_FILE}\"\n\n  yq r \"${SUBDIR}/${YAML_FILE}\" -j | \\\n    jq --arg APP_NAME \"${APP_NAME}\" --arg VERSION \"${VERSION}\" --arg REPO \"${HELM_URL}\" '.dependencies |= map((select(.name == $APP_NAME) | .version = $VERSION | .repository = $REPO) // .)' | \\\n    yq r --prettyPrint - \u003e \"${SUBDIR}/${YAML_FILE}.new\"\n\n  rm \"${SUBDIR}/${YAML_FILE}\"\n  mv \"${SUBDIR}/${YAML_FILE}.new\" \"${SUBDIR}/${YAML_FILE}\"\n\n  echo \"Requirements after update\"\n  cat \"${SUBDIR}/${YAML_FILE}\"\n\nelif [[ -n \"${HELM_URL}\" ]]; then\n  echo \"Creating first time chart using ${SUBDIR}\"\n  # create directory\n  mkdir -p \"${SUBDIR}\"\n\n  # WARNING: Do not indent the cat commands below\n\ncat \u003c\u003cEOF \u003e\"${SUBDIR}/Chart.yaml\"\napiVersion: v2\nversion: 0.1.0\nname: ${APP_NAME}\ndescription: Chart to configure ArgoCD with the ${APP_NAME} project and its applications\nEOF\n\ncat \u003c\u003cEOF \u003e\"${SUBDIR}/${YAML_FILE}\"\ndependencies:\n  - name: ${APP_NAME}\n    version: ${VERSION}\n    repository: \u003e-\n      ${HELM_URL}\nEOF\n\ncat \u003c\u003cEOF \u003e\"${SUBDIR}/values.yaml\"\nglobal: {}\n${APP_NAME}:\n  replicaCount: 1\nEOF\n\n\nelse\n  echo \"GitOps repo configured but unable to update application config\"\n  exit 1\nfi\n\nif [[ $(git status -s | wc -l) -eq 0 ]]; then\n  echo \"No changes\"\n  exit 0\nfi\n\ngit add \"${SUBDIR}/\"\ngit commit -m \"Updates ${APP_NAME} to ${VERSION}\"\ngit push -v\n","workingDir":"$(params.source-dir)"}],"volumes":[{"emptyDir":{},"name":"source"}]}}
-  creationTimestamp: "2022-04-26T09:49:11Z"
   generation: 1
   labels:
     version: 2.7.7
   name: ibm-gitops-v2-7-7
-  resourceVersion: "137872744"
-  uid: fc4f72e1-d2a6-4ce8-8238-58f6267df603
 spec:
   params:
-  - default: ""
-    name: app-name
-    type: string
-  - default: ""
-    name: version
-    type: string
-  - default: /source
-    name: source-dir
-    type: string
-  - default: ""
-    name: subdir
-    type: string
-  - default: ""
-    name: parentdir
-    type: string
-  - default: requirements.yaml
-    name: yaml
-    type: string
-  - default: ""
-    name: helm-url
-    type: string
-  - default: quay.io/ibmgaragecloud/ibmcloud-dev:v2.0.4
-    name: tools-image
-    type: string
+    - default: ""
+      name: app-name
+      type: string
+    - default: ""
+      name: version
+      type: string
+    - default: /source
+      name: source-dir
+      type: string
+    - default: ""
+      name: subdir
+      type: string
+    - default: ""
+      name: parentdir
+      type: string
+    - default: requirements.yaml
+      name: yaml
+      type: string
+    - default: ""
+      name: helm-url
+      type: string
+    - default: quay.io/ibmgaragecloud/ibmcloud-dev:v2.0.4
+      name: tools-image
+      type: string
   stepTemplate:
     name: ""
     resources: {}
     volumeMounts:
-    - mountPath: $(params.source-dir)
-      name: source
+      - mountPath: $(params.source-dir)
+        name: source
   steps:
-  - env:
-    - name: NAMESPACE
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.namespace
-    - name: HOME
-      value: /home/devops
-    - name: GIT_USERNAME
-      valueFrom:
-        secretKeyRef:
-          key: username
-          name: git-credentials
-          optional: true
-    - name: GIT_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          key: password
-          name: git-credentials
-          optional: true
-    - name: GIT_USERNAME_CD
-      valueFrom:
-        secretKeyRef:
-          key: username
-          name: gitops-cd-secret
-          optional: true
-    - name: GIT_PASSWORD_CD
-      valueFrom:
-        secretKeyRef:
-          key: password
-          name: gitops-cd-secret
-          optional: true
-    - name: GIT_PARENT_DIR
-      valueFrom:
-        configMapKeyRef:
-          key: parentdir
-          name: gitops-repo
-          optional: true
-    - name: GIT_PARENT_DIR_SERVICES
-      valueFrom:
-        configMapKeyRef:
-          key: parentdir-services
-          name: gitops-repo
-          optional: true
-    - name: GIT_PROTOCOL
-      valueFrom:
-        configMapKeyRef:
-          key: protocol
-          name: gitops-repo
-          optional: true
-    - name: GIT_HOST
-      valueFrom:
-        configMapKeyRef:
-          key: host
-          name: gitops-repo
-          optional: true
-    - name: GIT_ORG
-      valueFrom:
-        configMapKeyRef:
-          key: org
-          name: gitops-repo
-          optional: true
-    - name: GIT_REPO
-      valueFrom:
-        configMapKeyRef:
-          key: repo
-          name: gitops-repo
-          optional: true
-    - name: GIT_BRANCH
-      valueFrom:
-        configMapKeyRef:
-          key: branch
-          name: gitops-repo
-          optional: true
-    image: $(params.tools-image)
-    name: gitops
-    resources: {}
-    script: |
-      #!/usr/bin/env bash
-      set -ex
+    - env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: HOME
+          value: /home/devops
+        - name: GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: git-credentials
+              optional: true
+        - name: GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: git-credentials
+              optional: true
+        - name: GIT_USERNAME_CD
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: gitops-cd-secret
+              optional: true
+        - name: GIT_PASSWORD_CD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: gitops-cd-secret
+              optional: true
+        - name: GIT_PARENT_DIR
+          valueFrom:
+            configMapKeyRef:
+              key: parentdir
+              name: gitops-repo
+              optional: true
+        - name: GIT_PARENT_DIR_SERVICES
+          valueFrom:
+            configMapKeyRef:
+              key: parentdir-services
+              name: gitops-repo
+              optional: true
+        - name: GIT_PROTOCOL
+          valueFrom:
+            configMapKeyRef:
+              key: protocol
+              name: gitops-repo
+              optional: true
+        - name: GIT_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: host
+              name: gitops-repo
+              optional: true
+        - name: GIT_ORG
+          valueFrom:
+            configMapKeyRef:
+              key: org
+              name: gitops-repo
+              optional: true
+        - name: GIT_REPO
+          valueFrom:
+            configMapKeyRef:
+              key: repo
+              name: gitops-repo
+              optional: true
+        - name: GIT_BRANCH
+          valueFrom:
+            configMapKeyRef:
+              key: branch
+              name: gitops-repo
+              optional: true
+      image: $(params.tools-image)
+      name: gitops
+      resources: {}
+      script: |
+        #!/usr/bin/env bash
+        set -ex
 
-      APP_NAME="$(params.app-name)"
-      SUBDIR="$(params.subdir)"
-      if [[ -z "${SUBDIR}" ]]; then
-        SUBDIR="${APP_NAME}"
-      fi
-      if [[ -n "$(params.parentdir)" ]]; then
-        PARENT_DIR="$(params.parentdir)"
-      elif [[ -n "${GIT_PARENT_DIR_SERVICES}" ]] && [[ "${GIT_PARENT_DIR_SERVICES}" = "bash -c"* ]]; then
-        PARENT_DIR=$(eval $GIT_PARENT_DIR_SERVICES | tail -n 1)
-      elif [[ -n "${GIT_PARENT_DIR_SERVICES}" ]]; then
-        PARENT_DIR="${GIT_PARENT_DIR_SERVICES}"
-      elif [[ -n "${GIT_PARENT_DIR}" ]] && [[ "${GIT_PARENT_DIR}" = "bash -c"* ]]; then
-        PARENT_DIR=$(eval $GIT_PARENT_DIR | tail -n 1)
-      elif [[ -n "${GIT_PARENT_DIR}" ]]; then
-        PARENT_DIR="${GIT_PARENT_DIR}"
-      else
-        PARENT_DIR="."
-      fi
-      SUBDIR="${PARENT_DIR}/${SUBDIR}"
+        APP_NAME="$(params.app-name)"
+        SUBDIR="$(params.subdir)"
+        if [[ -z "${SUBDIR}" ]]; then
+          SUBDIR="${APP_NAME}"
+        fi
+        if [[ -n "$(params.parentdir)" ]]; then
+          PARENT_DIR="$(params.parentdir)"
+        elif [[ -n "${GIT_PARENT_DIR_SERVICES}" ]] && [[ "${GIT_PARENT_DIR_SERVICES}" = "bash -c"* ]]; then
+          PARENT_DIR=$(eval $GIT_PARENT_DIR_SERVICES | tail -n 1)
+        elif [[ -n "${GIT_PARENT_DIR_SERVICES}" ]]; then
+          PARENT_DIR="${GIT_PARENT_DIR_SERVICES}"
+        elif [[ -n "${GIT_PARENT_DIR}" ]] && [[ "${GIT_PARENT_DIR}" = "bash -c"* ]]; then
+          PARENT_DIR=$(eval $GIT_PARENT_DIR | tail -n 1)
+        elif [[ -n "${GIT_PARENT_DIR}" ]]; then
+          PARENT_DIR="${GIT_PARENT_DIR}"
+        else
+          PARENT_DIR="."
+        fi
+        SUBDIR="${PARENT_DIR}/${SUBDIR}"
 
-      PROTOCOL="${GIT_PROTOCOL}"
-      if [[ -z "${PROTOCOL}" ]]; then
-        PROTOCOL="https"
-      fi
+        PROTOCOL="${GIT_PROTOCOL}"
+        if [[ -z "${PROTOCOL}" ]]; then
+          PROTOCOL="https"
+        fi
 
-      YAML_FILE="$(params.yaml)"
-      VERSION="$(params.version)"
-      HELM_URL="$(params.helm-url)"
+        YAML_FILE="$(params.yaml)"
+        VERSION="$(params.version)"
+        HELM_URL="$(params.helm-url)"
 
-      if [[ -z "${GIT_HOST}" ]] || [[ -z "${GIT_ORG}" ]] || [[ -z "${GIT_REPO}" ]]; then
-          echo "GitOps repo has not been configured with confimap gitops-repo. Skipping trigger step"
+        if [[ -z "${GIT_HOST}" ]] || [[ -z "${GIT_ORG}" ]] || [[ -z "${GIT_REPO}" ]]; then
+            echo "GitOps repo has not been configured with confimap gitops-repo. Skipping trigger step"
+            exit 0
+        fi
+
+        set +x
+        if [[ -n "${GIT_USERNAME_CD}" ]]; then
+          GIT_AUTH_USER="${GIT_USERNAME_CD}"
+          GIT_AUTH_PWD="${GIT_PASSWORD_CD}"
+        elif [[ -n "${GIT_USERNAME}" ]]; then
+          GIT_AUTH_USER="${GIT_USERNAME}"
+          GIT_AUTH_PWD="${GIT_PASSWORD}"
+        else
+          echo "Credentials for GitOps repo not set in secret gitops-cd-secret or git-credentials"
+          exit 1
+        fi
+        set -x
+
+        BRANCH_CMD=""
+        if [[ -n "${GIT_BRANCH}" ]]; then
+          BRANCH_CMD="-b ${GIT_BRANCH}"
+        fi
+
+        git config --global user.email "gitops@cloudnativetoolkit.dev"
+        git config --global user.name "Cloud Native Toolkit Pipeline"
+        echo "git clone ${BRANCH_CMD} ${PROTOCOL}://${GIT_AUTH_USER}:xxxx@${GIT_HOST}/${GIT_ORG}/${GIT_REPO}"
+        set +x
+        GIT_URL="${PROTOCOL}://${GIT_AUTH_USER}:${GIT_AUTH_PWD}@${GIT_HOST}/${GIT_ORG}/${GIT_REPO}"
+        git clone ${BRANCH_CMD} ${GIT_URL} gitops_cd
+        set -x
+        cd gitops_cd
+
+
+        if [[ -f "${SUBDIR}/${YAML_FILE}" ]]; then
+          echo "Requirements before update"
+          cat "${SUBDIR}/${YAML_FILE}"
+
+          yq r "${SUBDIR}/${YAML_FILE}" -j | \
+            jq --arg APP_NAME "${APP_NAME}" --arg VERSION "${VERSION}" --arg REPO "${HELM_URL}" '.dependencies |= map((select(.name == $APP_NAME) | .version = $VERSION | .repository = $REPO) // .)' | \
+            yq r --prettyPrint - > "${SUBDIR}/${YAML_FILE}.new"
+
+          rm "${SUBDIR}/${YAML_FILE}"
+          mv "${SUBDIR}/${YAML_FILE}.new" "${SUBDIR}/${YAML_FILE}"
+
+          echo "Requirements after update"
+          cat "${SUBDIR}/${YAML_FILE}"
+
+        elif [[ -n "${HELM_URL}" ]]; then
+          echo "Creating first time chart using ${SUBDIR}"
+          # create directory
+          mkdir -p "${SUBDIR}"
+
+          # WARNING: Do not indent the cat commands below
+
+        cat <<EOF >"${SUBDIR}/Chart.yaml"
+        apiVersion: v2
+        version: 0.1.0
+        name: ${APP_NAME}
+        description: Chart to configure ArgoCD with the ${APP_NAME} project and its applications
+        EOF
+
+        cat <<EOF >"${SUBDIR}/${YAML_FILE}"
+        dependencies:
+          - name: ${APP_NAME}
+            version: ${VERSION}
+            repository: >-
+              ${HELM_URL}
+        EOF
+
+        cat <<EOF >"${SUBDIR}/values.yaml"
+        global: {}
+        ${APP_NAME}:
+          replicaCount: 1
+        EOF
+
+
+        else
+          echo "GitOps repo configured but unable to update application config"
+          exit 1
+        fi
+
+        if [[ $(git status -s | wc -l) -eq 0 ]]; then
+          echo "No changes"
           exit 0
-      fi
+        fi
 
-      set +x
-      if [[ -n "${GIT_USERNAME_CD}" ]]; then
-        GIT_AUTH_USER="${GIT_USERNAME_CD}"
-        GIT_AUTH_PWD="${GIT_PASSWORD_CD}"
-      elif [[ -n "${GIT_USERNAME}" ]]; then
-        GIT_AUTH_USER="${GIT_USERNAME}"
-        GIT_AUTH_PWD="${GIT_PASSWORD}"
-      else
-        echo "Credentials for GitOps repo not set in secret gitops-cd-secret or git-credentials"
-        exit 1
-      fi
-      set -x
-
-      BRANCH_CMD=""
-      if [[ -n "${GIT_BRANCH}" ]]; then
-        BRANCH_CMD="-b ${GIT_BRANCH}"
-      fi
-
-      git config --global user.email "gitops@cloudnativetoolkit.dev"
-      git config --global user.name "Cloud Native Toolkit Pipeline"
-      echo "git clone ${BRANCH_CMD} ${PROTOCOL}://${GIT_AUTH_USER}:xxxx@${GIT_HOST}/${GIT_ORG}/${GIT_REPO}"
-      set +x
-      GIT_URL="${PROTOCOL}://${GIT_AUTH_USER}:${GIT_AUTH_PWD}@${GIT_HOST}/${GIT_ORG}/${GIT_REPO}"
-      git clone ${BRANCH_CMD} ${GIT_URL} gitops_cd
-      set -x
-      cd gitops_cd
-
-
-      if [[ -f "${SUBDIR}/${YAML_FILE}" ]]; then
-        echo "Requirements before update"
-        cat "${SUBDIR}/${YAML_FILE}"
-
-        yq r "${SUBDIR}/${YAML_FILE}" -j | \
-          jq --arg APP_NAME "${APP_NAME}" --arg VERSION "${VERSION}" --arg REPO "${HELM_URL}" '.dependencies |= map((select(.name == $APP_NAME) | .version = $VERSION | .repository = $REPO) // .)' | \
-          yq r --prettyPrint - > "${SUBDIR}/${YAML_FILE}.new"
-
-        rm "${SUBDIR}/${YAML_FILE}"
-        mv "${SUBDIR}/${YAML_FILE}.new" "${SUBDIR}/${YAML_FILE}"
-
-        echo "Requirements after update"
-        cat "${SUBDIR}/${YAML_FILE}"
-
-      elif [[ -n "${HELM_URL}" ]]; then
-        echo "Creating first time chart using ${SUBDIR}"
-        # create directory
-        mkdir -p "${SUBDIR}"
-
-        # WARNING: Do not indent the cat commands below
-
-      cat <<EOF >"${SUBDIR}/Chart.yaml"
-      apiVersion: v2
-      version: 0.1.0
-      name: ${APP_NAME}
-      description: Chart to configure ArgoCD with the ${APP_NAME} project and its applications
-      EOF
-
-      cat <<EOF >"${SUBDIR}/${YAML_FILE}"
-      dependencies:
-        - name: ${APP_NAME}
-          version: ${VERSION}
-          repository: >-
-            ${HELM_URL}
-      EOF
-
-      cat <<EOF >"${SUBDIR}/values.yaml"
-      global: {}
-      ${APP_NAME}:
-        replicaCount: 1
-      EOF
-
-
-      else
-        echo "GitOps repo configured but unable to update application config"
-        exit 1
-      fi
-
-      if [[ $(git status -s | wc -l) -eq 0 ]]; then
-        echo "No changes"
-        exit 0
-      fi
-
-      git add "${SUBDIR}/"
-      git commit -m "Updates ${APP_NAME} to ${VERSION}"
-      git push -v
-    workingDir: $(params.source-dir)
+        git add "${SUBDIR}/"
+        git commit -m "Updates ${APP_NAME} to ${VERSION}"
+        git push -v
+      workingDir: $(params.source-dir)
   volumes:
-  - emptyDir: {}
-    name: source
+    - emptyDir: {}
+      name: source
