@@ -69,7 +69,22 @@ module "dev-cluster" {
   cluster-token     = var.dev-cluster-token
   registry-user     = var.registry-user
   registry-token    = var.registry-token
+  gitops-repo       = var.gitops-repo
+  git-user          = var.git-user
+  git-token         = var.git-token
   providers = {
     kubernetes.cluster-context = kubernetes.dev-cluster
   }
 }
+
+module "multiarch-pipeline" {
+  depends_on = [
+    module.dev-cluster
+  ]
+  source       = "./module/dev-cluster/multiarch-pipeline"
+  project-name = var.project-name
+  providers = {
+    kubernetes.cluster-context = kubernetes.dev-cluster
+  }
+}
+

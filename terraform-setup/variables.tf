@@ -4,26 +4,61 @@ variable "project-name" {
 
 ### Clusters hosts
 
-variable "dev-cluster-host" {}
+variable "dev-cluster-host" {
+  description = "Hostname of the dev cluster. This cluster will be used for the development stage"
+}
 
-variable "x86-cluster-host" {}
+variable "x86-cluster-host" {
+  description = "Hostname of the x86 cluster. This cluster will be used for running a remote pipeline aswell as deploying the application"
+}
 
-variable "z-cluster-host" {}
+variable "z-cluster-host" {
+  description = "Hostname of the z cluster. This cluster will be used for running a remote pipeline aswell as deploying the application"
+}
 
-variable "power-cluster-host" {}
+variable "power-cluster-host" {
+  description = "Hostname of the power cluster. This cluster will be used for running a remote pipeline aswell as deploying the application"
+}
 
 ### Clusters tokens
 
-variable "dev-cluster-token" {}
+variable "dev-cluster-token" {
+  description = "Token of the dev cluster."
+}
 
-variable "x86-cluster-token" {}
+variable "x86-cluster-token" {
+  description = "Token of the x86 cluster."
+}
 
-variable "z-cluster-token" {}
+variable "z-cluster-token" {
+  description = "Token of the z cluster."
+}
 
-variable "power-cluster-token" {}
+variable "power-cluster-token" {
+  description = "Token of the power cluster."
+}
 
 ### Image registry access
 
-variable "registry-user" {}
+variable "registry-user" {
+  description = "Username for the image registry."
+}
 
-variable "registry-token" {}
+variable "registry-token" {
+  description = "Token for the image registry."
+}
+
+
+### Git repo access
+
+variable "gitops-repo" {
+  description = "Git repo for the gitops."
+}
+
+variable "git-user" {
+  description = "Git user for the git repository."
+}
+
+variable "git-token" {
+  description = "Git token for the git repository."
+}

@@ -119,7 +119,6 @@ resource "local_sensitive_file" "pipeline-starter-token-file" {
   content  = data.kubernetes_secret.pipeline-starter-secret.data.token
 }
 
-# TODO Add quay registry access secret
 resource "kubernetes_secret" "registry-access" {
   provider = kubernetes.cluster-context
   type     = "Opaque"

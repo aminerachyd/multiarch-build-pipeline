@@ -63,7 +63,6 @@ resource "kubernetes_secret" "power-cluster-token" {
   }
 }
 
-# TODO Add quay registry access secret
 resource "kubernetes_secret" "registry-access" {
   provider = kubernetes.cluster-context
   type     = "Opaque"
@@ -77,7 +76,7 @@ resource "kubernetes_secret" "registry-access" {
   }
 }
 
-resource "null_resource" "oc-sync" {
+resource "null_resource" "igc-sync" {
   depends_on = [
     kubernetes_namespace.dev-project,
     kubernetes_secret.registry-access
@@ -90,9 +89,21 @@ resource "null_resource" "oc-sync" {
 resource "null_resource" "oc-apply" {
   depends_on = [
     kubernetes_namespace.dev-project,
-    null_resource.oc-sync
+    null_resource.igc-sync
   ]
   provisioner "local-exec" {
     command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/oc apply -f ./apply-on-master-cluster -n ${kubernetes_namespace.dev-project.metadata[0].name}"
   }
 }
+
+resource "null_resource" "igc-gitops" {
+  depends_on = [
+    kubernetes_namespace.dev-project,
+    null_resource.oc-apply,
+    null_resource.igc-sync
+  ]
+  provisioner "local-exec" {
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/igc gitops ${var.gitops-repo} -n ${kubernetes_namespace.dev-project.metadata[0].name} -u ${var.git-user} -p ${var.git-token}"
+  }
+}
+

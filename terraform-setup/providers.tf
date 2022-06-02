@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    kubectl = {
+      source = "gavinbunney/kubectl"
+    }
+  }
+}
+
 provider "kubernetes" {
   alias    = "dev-cluster"
   host     = var.dev-cluster-host
@@ -23,5 +31,11 @@ provider "kubernetes" {
   alias    = "power-cluster"
   host     = var.power-cluster-host
   token    = var.power-cluster-token
+  insecure = true
+}
+
+provider "kubectl" {
+  host     = var.dev-cluster-host
+  token    = var.dev-cluster-token
   insecure = true
 }
