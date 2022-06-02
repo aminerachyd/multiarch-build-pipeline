@@ -66,7 +66,7 @@ spec:
       type: string
     - default: https
       description:
-        Protocol to check health after deployment, either https or grpc,
+        Protocol to check health after deployment, either https or https,
         defaults to https
       name: health-protocol
       type: string

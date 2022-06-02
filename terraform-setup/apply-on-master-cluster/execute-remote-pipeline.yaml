@@ -34,61 +34,70 @@ spec:
     - name: openshift-token-secret
       type: string
       description: Name of the secret holding the authentication token
+    - name: run-task
+      description: Runs the task on the remote cluster
+      default: "true"
   steps:
-  - name: execute-remote-pipeline-step
-    command:
-    - /bin/bash
-    args:
-    - -c
-    - |
-      set -e
+    - name: execute-remote-pipeline-step
+      command:
+        - /bin/bash
+      args:
+        - -c
+        - |
+          set -e
 
-      if [ -z "$OPENSHIFT_TOKEN" ]; then
-        echo OPENSHIFT_TOKEN is empty
-        exit 1
-      fi
+          # Check run task parameter
+          if [ "$(params.run-task)" != "true" ]; then
+            echo "Skipping remote pipeline execution"
+            exit 0
+          fi
 
-      oc login \
-        --token "$OPENSHIFT_TOKEN" \
-        --insecure-skip-tls-verify \
-        "$(params.openshift-server-url)"
+          if [ -z "$OPENSHIFT_TOKEN" ]; then
+            echo OPENSHIFT_TOKEN is empty
+            exit 1
+          fi
 
-      PIPELINERUN=$(
-        tkn pipeline start \
-          --namespace $(params.pipeline-namespace) \
-          --param git-url=$(params.git-url) \
-          --param git-revision=$(params.git-revision) \
-        	--param image-server=$(params.image-server) \
-        	--param image-namespace=$(params.image-namespace) \
-        	--param image-repository=$(params.image-repository) \
-        	--param image-tag=$(params.image-tag) \
-          $(params.pipeline-name) \
-          | sed --quiet 's/Pipelinerun started: \(.*\)/\1/p'
-      )
+          oc login \
+            --token "$OPENSHIFT_TOKEN" \
+            --insecure-skip-tls-verify \
+            "$(params.openshift-server-url)"
 
-      tkn pipelinerun logs \
-        --namespace $(params.pipeline-namespace) \
-        --follow "$PIPELINERUN"
+          PIPELINERUN=$(
+            tkn pipeline start \
+              --namespace $(params.pipeline-namespace) \
+              --param git-url=$(params.git-url) \
+              --param git-revision=$(params.git-revision) \
+            	--param image-server=$(params.image-server) \
+            	--param image-namespace=$(params.image-namespace) \
+            	--param image-repository=$(params.image-repository) \
+            	--param image-tag=$(params.image-tag) \
+              $(params.pipeline-name) \
+              | sed --quiet 's/Pipelinerun started: \(.*\)/\1/p'
+          )
 
-      STATUS=$(
-        oc get pipelinerun \
-          --namespace $(params.pipeline-namespace) \
-          "$PIPELINERUN" \
-          --output jsonpath='{.status.conditions[?(@.type=="Succeeded")].status}'
-      )
+          tkn pipelinerun logs \
+            --namespace $(params.pipeline-namespace) \
+            --follow "$PIPELINERUN"
 
-      if [ "$STATUS" != True ]; then
-        echo "Remote pipeline failed:"
-        oc get pipelinerun \
-          --namespace $(params.pipeline-namespace) \
-          "$PIPELINERUN" \
-          --output jsonpath='{.status.conditions[?(@.type=="Succeeded")].message}'
-        exit 1
-      fi
-    image: quay.io/noseka1/execute-remote-pipeline:latest
-    env:
-    - name: OPENSHIFT_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: $(params.openshift-token-secret)
-          key: openshift-token
+          STATUS=$(
+            oc get pipelinerun \
+              --namespace $(params.pipeline-namespace) \
+              "$PIPELINERUN" \
+              --output jsonpath='{.status.conditions[?(@.type=="Succeeded")].status}'
+          )
+
+          if [ "$STATUS" != True ]; then
+            echo "Remote pipeline failed:"
+            oc get pipelinerun \
+              --namespace $(params.pipeline-namespace) \
+              "$PIPELINERUN" \
+              --output jsonpath='{.status.conditions[?(@.type=="Succeeded")].message}'
+            exit 1
+          fi
+      image: quay.io/noseka1/execute-remote-pipeline:latest
+      env:
+        - name: OPENSHIFT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.openshift-token-secret)
+              key: openshift-token

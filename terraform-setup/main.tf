@@ -81,10 +81,10 @@ module "multiarch-pipeline" {
   depends_on = [
     module.dev-cluster
   ]
-  source       = "./module/dev-cluster/multiarch-pipeline"
-  project-name = var.project-name
-  providers = {
-    kubernetes.cluster-context = kubernetes.dev-cluster
-  }
+  source             = "./module/dev-cluster/multiarch-pipeline"
+  project-name       = var.project-name
+  x86-cluster-host   = var.x86-cluster-host
+  z-cluster-host     = var.z-cluster-host
+  power-cluster-host = var.power-cluster-host
 }
 
