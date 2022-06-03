@@ -59,10 +59,11 @@ resource "kubectl_manifest" "argo-app-test" {
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ${var.app-name}-test
+  name: ${var.app-name}-test-${var.project-name}
   namespace: openshift-gitops
   labels:
     env: test
+    project : ${var.project-name}
 spec:
   destination:
     name: ${var.destination-cluster}
@@ -84,3 +85,36 @@ spec:
     - PruneLast=true
 YAML
 }
+
+resource "kubectl_manifest" "argo-app-prod" {
+  yaml_body = <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${var.app-name}-prod-${var.project-name}
+  namespace: openshift-gitops
+  labels:
+    env: prod
+    project : ${var.project-name}
+spec:
+  destination:
+    name: ${var.destination-cluster}
+    namespace: ${var.project-name}-prod
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: ${var.app-name}.namespaceToDeploy
+        value: ${var.project-name}-prod
+    path: ${var.app-name}
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true
+YAML
+}
+

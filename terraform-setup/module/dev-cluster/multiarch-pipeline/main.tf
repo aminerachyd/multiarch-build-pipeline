@@ -357,8 +357,6 @@ spec:
         value: $(tasks.helm-release.results.helm-url)
       - name: tools-image
         value: $(tasks.setup.results.tools-image)
-      - name: app-name
-        value: $(tasks.setup.results.app-name)
     runAfter:
       - helm-release
     taskRef:
@@ -382,6 +380,7 @@ module "frontend-pipelinerun" {
   destination-cluster = "diamond"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -396,6 +395,7 @@ module "cartservice-pipelinerun" {
   health-protocol     = "grpc"
   build-on-x86        = true
   destination-cluster = "topaz"
+  project-name        = var.project-name
   x86-server-url      = var.x86-cluster-host
 }
 
@@ -412,6 +412,7 @@ module "emailservice-pipelinerun" {
   build-on-power      = true
   destination-cluster = "opal"
   x86-server-url      = var.x86-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -428,6 +429,7 @@ module "recommendationservice-pipelinerun" {
   build-on-power      = true
   destination-cluster = "topaz"
   x86-server-url      = var.x86-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -446,6 +448,7 @@ module "productcatalogservice-pipelinerun" {
   destination-cluster = "diamond"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -464,6 +467,7 @@ module "shippingservice-pipelinerun" {
   destination-cluster = "diamond"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -482,6 +486,7 @@ module "currencyservice-pipelinerun" {
   destination-cluster = "topaz"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -500,6 +505,7 @@ module "paymentservice-pipelinerun" {
   destination-cluster = "opal"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }
 
@@ -518,5 +524,6 @@ module "checkoutservice-pipelinerun" {
   destination-cluster = "diamond"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
+  project-name        = var.project-name
   power-server-url    = var.power-cluster-host
 }

@@ -132,21 +132,11 @@ resource "kubernetes_secret" "registry-access" {
   }
 }
 
-resource "null_resource" "oc-sync" {
+resource "null_resource" "oc-apply-igc-sync" {
   depends_on = [
     kubernetes_namespace.dev-project,
   ]
   provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
-  }
-}
-
-resource "null_resource" "oc-apply" {
-  depends_on = [
-    kubernetes_namespace.dev-project,
-    null_resource.oc-sync
-  ]
-  provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/oc apply -f ./apply-on-builder-clusters  -n ${kubernetes_namespace.dev-project.metadata[0].name}"
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/oc apply -f ./apply-on-builder-clusters  -n ${kubernetes_namespace.dev-project.metadata[0].name} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
   }
 }

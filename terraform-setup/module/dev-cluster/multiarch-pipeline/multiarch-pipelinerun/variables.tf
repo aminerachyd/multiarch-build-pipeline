@@ -1,7 +1,5 @@
 variable "app-name" {}
-variable "project-name" {
-  default = "multiarch-build"
-}
+variable "project-name" {}
 variable "git-url" {}
 variable "git-revision" {
   default = "master"
@@ -46,6 +44,4 @@ variable "z-server-url" {
   default = "_"
 }
 
-variable "destination-cluster" {
-
-}
+variable "destination-cluster" {}

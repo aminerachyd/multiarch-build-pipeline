@@ -76,34 +76,23 @@ resource "kubernetes_secret" "registry-access" {
   }
 }
 
-resource "null_resource" "igc-sync" {
+resource "null_resource" "oc-apply-igc-sync" {
   depends_on = [
     kubernetes_namespace.dev-project,
-    kubernetes_secret.registry-access
+    kubernetes_secret.registry-access,
   ]
   provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
-  }
-}
-
-resource "null_resource" "oc-apply" {
-  depends_on = [
-    kubernetes_namespace.dev-project,
-    null_resource.igc-sync
-  ]
-  provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/oc apply -f ./apply-on-master-cluster -n ${kubernetes_namespace.dev-project.metadata[0].name}"
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/oc apply -f ./apply-on-master-cluster -n ${kubernetes_namespace.dev-project.metadata[0].name} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
   }
 }
 
 resource "null_resource" "igc-gitops" {
   depends_on = [
     kubernetes_namespace.dev-project,
-    null_resource.oc-apply,
-    null_resource.igc-sync
+    null_resource.oc-apply-igc-sync,
   ]
   provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} && ./$BINPATH/igc gitops ${var.gitops-repo} -n ${kubernetes_namespace.dev-project.metadata[0].name} -u ${var.git-user} -p ${var.git-token}"
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/igc gitops ${var.gitops-repo} -n ${kubernetes_namespace.dev-project.metadata[0].name} -u ${var.git-user} -p ${var.git-token}"
   }
 }
 

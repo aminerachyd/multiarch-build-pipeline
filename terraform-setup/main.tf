@@ -22,7 +22,8 @@ module "z-cluster" {
 
 module "x86-cluster" {
   depends_on = [
-    module.clis
+    module.clis,
+    module.z-cluster
   ]
   source         = "./module/workload-cluster"
   project-name   = var.project-name
@@ -38,7 +39,8 @@ module "x86-cluster" {
 
 module "power-cluster" {
   depends_on = [
-    module.clis
+    module.clis,
+    module.x86-cluster
   ]
   source         = "./module/workload-cluster"
   project-name   = var.project-name
