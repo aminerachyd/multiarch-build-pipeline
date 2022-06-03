@@ -372,7 +372,8 @@ module "frontend-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "frontend"
   git-url             = "https://github.com/aminerachyd/frontend"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-z          = true
@@ -391,7 +392,8 @@ module "cartservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "cartservice"
   git-url             = "https://github.com/aminerachyd/cartservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   destination-cluster = "topaz"
@@ -406,7 +408,8 @@ module "emailservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "emailservice"
   git-url             = "https://github.com/aminerachyd/emailservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-power      = true
@@ -423,7 +426,8 @@ module "recommendationservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "recommendationservice"
   git-url             = "https://github.com/aminerachyd/recommendationservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-power      = true
@@ -440,7 +444,8 @@ module "productcatalogservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "productcatalogservice"
   git-url             = "https://github.com/aminerachyd/productcatalogservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-z          = true
@@ -459,7 +464,8 @@ module "shippingservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "shippingservice"
   git-url             = "https://github.com/aminerachyd/shippingservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-z          = true
@@ -478,7 +484,8 @@ module "currencyservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "currencyservice"
   git-url             = "https://github.com/aminerachyd/currencyservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-z          = true
@@ -497,7 +504,8 @@ module "paymentservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "paymentservice"
   git-url             = "https://github.com/aminerachyd/paymentservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-z          = true
@@ -516,7 +524,8 @@ module "checkoutservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "checkoutservice"
   git-url             = "https://github.com/aminerachyd/checkoutservice"
-  image-namespace     = "aminerachyd"
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-z          = true

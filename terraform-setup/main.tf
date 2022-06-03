@@ -88,5 +88,7 @@ module "multiarch-pipeline" {
   x86-cluster-host   = var.x86-cluster-host
   z-cluster-host     = var.z-cluster-host
   power-cluster-host = var.power-cluster-host
+  image-namespace    = var.image-namespace
+  image-server       = var.image-server
 }
 

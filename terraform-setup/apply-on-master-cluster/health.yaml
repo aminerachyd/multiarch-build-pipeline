@@ -73,7 +73,6 @@ spec:
         # sleep for 10 seconds to allow enough time for the server to start
         sleep 10
         echo "Health check start"
-        # TODO Update curl command to grpc_health_probe
         if [[ "${PROTOCOL}" == "grpc" ]]; then
             echo "grpc protocol"
             GRPC_ADDR="${APP_NAME}:$(kubectl get service ${APP_NAME} -n ${APP_NAMESPACE} --output=jsonpath='{ .spec.ports[0].port }')"

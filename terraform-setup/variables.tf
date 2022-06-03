@@ -40,6 +40,15 @@ variable "power-cluster-token" {
 
 ### Image registry access
 
+variable "image-server" {
+  default     = "quay.io"
+  description = "Hostname of the image registry server."
+}
+
+variable "image-namespace" {
+  description = "Namespace of the image registry (user or organization)."
+}
+
 variable "registry-user" {
   description = "Username for the image registry."
 }
