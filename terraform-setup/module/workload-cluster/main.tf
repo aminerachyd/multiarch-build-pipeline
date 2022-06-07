@@ -119,11 +119,11 @@ resource "local_sensitive_file" "pipeline-starter-token-file" {
   content  = data.kubernetes_secret.pipeline-starter-secret.data.token
 }
 
-resource "kubernetes_secret" "registry-access" {
+resource "kubernetes_secret" "docker-registry-access" {
   provider = kubernetes.cluster-context
   type     = "Opaque"
   metadata {
-    name      = "registry-access"
+    name      = "docker-registry-access"
     namespace = kubernetes_namespace.dev-project.metadata[0].name
   }
   data = {

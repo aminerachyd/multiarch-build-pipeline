@@ -6,6 +6,24 @@ terraform {
   }
 }
 
+resource "kubectl_manifest" "trigger-binding" {
+  yaml_body = <<YAML
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-binding
+  namespace: ${var.project-name}-dev
+  labels:
+    app: trigger-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.head_commit.id)
+    - name: gitrepositoryurl
+      value: $(body.repository.url)
+YAML
+}
+
 module "frontend-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "frontend"
@@ -24,6 +42,10 @@ module "frontend-pipelinerun" {
 }
 
 module "cartservice-pipelinerun" {
+  depends_on = [
+    module.frontend-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "cartservice"
   git-url             = "https://github.com/aminerachyd/cartservice"
@@ -37,6 +59,10 @@ module "cartservice-pipelinerun" {
 }
 
 module "emailservice-pipelinerun" {
+  depends_on = [
+    module.cartservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "emailservice"
   git-url             = "https://github.com/aminerachyd/emailservice"
@@ -52,6 +78,10 @@ module "emailservice-pipelinerun" {
 }
 
 module "recommendationservice-pipelinerun" {
+  depends_on = [
+    module.emailservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "recommendationservice"
   git-url             = "https://github.com/aminerachyd/recommendationservice"
@@ -67,6 +97,10 @@ module "recommendationservice-pipelinerun" {
 }
 
 module "productcatalogservice-pipelinerun" {
+  depends_on = [
+    module.recommendationservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "productcatalogservice"
   git-url             = "https://github.com/aminerachyd/productcatalogservice"
@@ -84,6 +118,10 @@ module "productcatalogservice-pipelinerun" {
 }
 
 module "shippingservice-pipelinerun" {
+  depends_on = [
+    module.productcatalogservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "shippingservice"
   git-url             = "https://github.com/aminerachyd/shippingservice"
@@ -101,6 +139,10 @@ module "shippingservice-pipelinerun" {
 }
 
 module "currencyservice-pipelinerun" {
+  depends_on = [
+    module.shippingservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "currencyservice"
   git-url             = "https://github.com/aminerachyd/currencyservice"
@@ -118,6 +160,10 @@ module "currencyservice-pipelinerun" {
 }
 
 module "paymentservice-pipelinerun" {
+  depends_on = [
+    module.currencyservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "paymentservice"
   git-url             = "https://github.com/aminerachyd/paymentservice"
@@ -135,6 +181,10 @@ module "paymentservice-pipelinerun" {
 }
 
 module "checkoutservice-pipelinerun" {
+  depends_on = [
+    module.paymentservice-pipelinerun
+  ]
+
   source              = "./multiarch-pipelinerun"
   app-name            = "checkoutservice"
   git-url             = "https://github.com/aminerachyd/checkoutservice"

@@ -63,11 +63,11 @@ resource "kubernetes_secret" "power-cluster-token" {
   }
 }
 
-resource "kubernetes_secret" "registry-access" {
+resource "kubernetes_secret" "docker-registry-access" {
   provider = kubernetes.cluster-context
   type     = "Opaque"
   metadata {
-    name      = "registry-access"
+    name      = "docker-registry-access"
     namespace = kubernetes_namespace.dev-project.metadata[0].name
   }
   data = {
@@ -79,7 +79,7 @@ resource "kubernetes_secret" "registry-access" {
 resource "null_resource" "oc-apply-igc-sync" {
   depends_on = [
     kubernetes_namespace.dev-project,
-    kubernetes_secret.registry-access,
+    kubernetes_secret.docker-registry-access,
   ]
   provisioner "local-exec" {
     command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/oc apply -f ./apply-on-master-cluster -n ${kubernetes_namespace.dev-project.metadata[0].name} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"

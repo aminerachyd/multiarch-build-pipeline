@@ -6,7 +6,7 @@ metadata:
       Deploys the application to the CI environment for verification using the
       provided helm chart
     app.openshift.io/vcs-ref: master
-    app.openshift.io/vcs-uri: 'https://github.com/IBM/ibm-garage-tekton-tasks'
+    app.openshift.io/vcs-uri: "https://github.com/IBM/ibm-garage-tekton-tasks"
     description: >-
       Deploys the application to the CI environment for verification using the
       provided helm chart
@@ -23,37 +23,37 @@ spec:
     - default: /source
       name: source-dir
       type: string
-    - default: ''
+    - default: ""
       name: image-server
       type: string
-    - default: ''
+    - default: ""
       name: image-namespace
       type: string
-    - default: ''
+    - default: ""
       name: image-repository
       type: string
-    - default: ''
+    - default: ""
       name: image-tag
       type: string
-    - default: ''
+    - default: ""
       name: app-namespace
       type: string
-    - default: ''
+    - default: ""
       name: app-name
       type: string
     - default: route
       name: deploy-ingress-type
       type: string
-    - default: 'quay.io/ibmgaragecloud/ibmcloud-dev:v2.0.4'
+    - default: "quay.io/ibmgaragecloud/ibmcloud-dev:v2.0.4"
       name: tools-image
       type: string
   results:
-    - description: ''
+    - description: ""
       name: service-port
-    - description: ''
+    - description: ""
       name: resource-type
   stepTemplate:
-    name: ''
+    name: ""
     resources: {}
     volumeMounts:
       - mountPath: $(params.source-dir)
@@ -98,6 +98,18 @@ spec:
             configMapKeyRef:
               key: INGRESS_SUBDOMAIN
               name: ibmcloud-config
+              optional: true
+        - name: REGISTRY_USER
+          valueFrom:
+            secretKeyRef:
+              key: REGISTRY_USER
+              name: docker-registry-access
+              optional: true
+        - name: REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: REGISTRY_PASSWORD
+              name: docker-registry-access
               optional: true
       image: $(params.tools-image)
       name: deploy
@@ -252,6 +264,11 @@ spec:
 
 
         echo -e "Deploying into: ${APP_NAMESPACE}/${APP_NAME}"
+
+        # Login to registry
+        kubectl create secret docker-registry regcred --docker-server=${IMAGE_SERVER} --docker-username=${REGISTRY_USER} --docker-password=${REGISTRY_PASSWORD}
+
+        kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "regcred"}]}' -n ${APP_NAMESPACE}
 
         kubectl apply -n ${APP_NAMESPACE} -f ./release.yaml --validate=false >
         results.out

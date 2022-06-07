@@ -175,13 +175,13 @@ spec:
           valueFrom:
             secretKeyRef:
               key: REGISTRY_URL
-              name: registry-access
+              name: docker-registry-access
               optional: true
         - name: REGISTRY_RELEASE_NAMESPACE
           valueFrom:
             secretKeyRef:
               key: REGISTRY_NAMESPACE
-              name: registry-access
+              name: docker-registry-access
               optional: true
       image: quay.io/ibmgaragecloud/alpine-git
       name: git-clone

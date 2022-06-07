@@ -412,7 +412,6 @@ spec:
   pipelineRef:
     name: multiarch-build-${var.app-name}
   serviceAccountName: pipeline
-  timeout: 1h0m0s
 YAML
 }
 
@@ -482,3 +481,21 @@ spec:
 YAML
 }
 
+module "pipeline-trigger" {
+  depends_on = [
+    kubectl_manifest.pipeline
+  ]
+  source           = "./pipeline-trigger"
+  app-name         = var.app-name
+  git-url          = "https://github.com/aminerachyd/frontend"
+  image-namespace  = var.image-namespace
+  image-server     = var.image-server
+  health-protocol  = "grpc"
+  build-on-x86     = true
+  build-on-z       = true
+  build-on-power   = true
+  x86-server-url   = var.x86-server-url
+  z-server-url     = var.z-server-url
+  project-name     = var.project-name
+  power-server-url = var.power-server-url
+}

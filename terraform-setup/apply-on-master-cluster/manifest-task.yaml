@@ -22,13 +22,13 @@ spec:
         - name: REGISTRY_USER
           valueFrom:
             secretKeyRef:
-              name: registry-access
+              name: docker-registry-access
               key: REGISTRY_USER
               optional: true
         - name: REGISTRY_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: registry-access
+              name: docker-registry-access
               key: REGISTRY_PASSWORD
               optional: true
       image: quay.io/buildah/stable:v1.18.0

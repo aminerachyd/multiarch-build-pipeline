@@ -99,13 +99,13 @@ spec:
           valueFrom:
             secretKeyRef:
               key: REGISTRY_USER
-              name: registry-access
+              name: docker-registry-access
               optional: true
         - name: REGISTRY_PASSWORD
           valueFrom:
             secretKeyRef:
               key: REGISTRY_PASSWORD
-              name: registry-access
+              name: docker-registry-access
               optional: true
       image: $(params.SKOPEO_IMAGE)
       name: trivy-pull
