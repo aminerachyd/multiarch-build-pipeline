@@ -80,7 +80,7 @@ EXIT_CODE=$?
 
 # Test exit code
 if [ $EXIT_CODE -eq 0 ]; then
-  $BINPATH/kubectl patch eventlistener/event-listener -n ${var.project-name}-dev --type=json -p '[{"op":"add","path":"/spec/triggers/-","value":{"bindings":[{"kind":"TriggerBinding","ref":"trigger-binding"}],"interceptors":[{"params":[{"name":"filter","value":"header.match(\"X-GitHub-Event\", \"push\") && body.ref == \"refs/heads/master\" && body.repository.full_name == \"${var.project-name}/${var.app-name}\""},{"name":"overlays","value":null}],"ref":{"kind":"ClusterInterceptor","name":"cel"}}],"name":"${var.project-name}-dev-${var.app-name}-master","template":{"ref":"${var.app-name}-dev"}}}]'
+  $BINPATH/kubectl patch eventlistener/event-listener -n ${var.project-name}-dev --type=json -p '[{"op":"add","path":"/spec/triggers/-","value":{"bindings":[{"kind":"TriggerBinding","ref":"trigger-binding"}],"interceptors":[{"params":[{"name":"filter","value": "header.match('"'"'X-GitHub-Event'"'"', '"'"'push'"'"') && body.ref == '"'"'refs/heads/master'"'"' && body.repository.full_name == '"'"'${var.git-user}/${var.app-name}'"'"'"},{"name":"overlays","value":null}],"ref":{"kind":"ClusterInterceptor","name":"cel"}}],"name":"${var.project-name}-dev-${var.app-name}-master","template":{"ref":"${var.app-name}"}}}]'
 else
   cat << YAML > event-listener.yaml
   apiVersion: triggers.tekton.dev/v1alpha1
@@ -98,7 +98,7 @@ else
       interceptors:
       - params:
         - name: filter
-          value: header.match('X-GitHub-Event', 'push') && body.ref == 'refs/heads/master' && body.repository.full_name == '${var.project-name}-dev/${var.app-name}'
+          value: header.match('X-GitHub-Event', 'push') && body.ref == 'refs/heads/master' && body.repository.full_name == '${var.git-user}/${var.app-name}'
         - name: overlays
           value: null
         ref:

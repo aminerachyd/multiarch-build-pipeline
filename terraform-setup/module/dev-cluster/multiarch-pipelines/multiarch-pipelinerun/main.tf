@@ -488,6 +488,7 @@ module "pipeline-trigger" {
   source           = "./pipeline-trigger"
   app-name         = var.app-name
   git-url          = "https://github.com/aminerachyd/frontend"
+  git-user         = var.git-user
   image-namespace  = var.image-namespace
   image-server     = var.image-server
   health-protocol  = "grpc"

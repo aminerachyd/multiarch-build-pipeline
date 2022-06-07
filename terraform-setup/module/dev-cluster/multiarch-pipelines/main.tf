@@ -24,10 +24,12 @@ spec:
 YAML
 }
 
+
 module "frontend-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "frontend"
   git-url             = "https://github.com/aminerachyd/frontend"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -49,6 +51,7 @@ module "cartservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "cartservice"
   git-url             = "https://github.com/aminerachyd/cartservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -66,6 +69,7 @@ module "emailservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "emailservice"
   git-url             = "https://github.com/aminerachyd/emailservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -85,6 +89,7 @@ module "recommendationservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "recommendationservice"
   git-url             = "https://github.com/aminerachyd/recommendationservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -104,6 +109,7 @@ module "productcatalogservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "productcatalogservice"
   git-url             = "https://github.com/aminerachyd/productcatalogservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -125,6 +131,7 @@ module "shippingservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "shippingservice"
   git-url             = "https://github.com/aminerachyd/shippingservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -146,6 +153,7 @@ module "currencyservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "currencyservice"
   git-url             = "https://github.com/aminerachyd/currencyservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -167,6 +175,7 @@ module "paymentservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "paymentservice"
   git-url             = "https://github.com/aminerachyd/paymentservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -188,6 +197,7 @@ module "checkoutservice-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "checkoutservice"
   git-url             = "https://github.com/aminerachyd/checkoutservice"
+  git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -199,4 +209,40 @@ module "checkoutservice-pipelinerun" {
   z-server-url        = var.z-cluster-host
   project-name        = var.project-name
   power-server-url    = var.power-cluster-host
+}
+
+resource "kubectl_manifest" "smee-client" {
+  depends_on = [
+    module.checkoutservice-pipelinerun
+  ]
+
+  yaml_body = <<YAML
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smee-client
+  namespace: ${var.project-name}-dev
+  labels:
+    app: smee-client
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: smee-client
+  template:
+    metadata:
+      labels:
+        app: smee-client
+    spec:
+      containers:
+        - name: smee-client
+          image: quay.io/schabrolles/smeeclient
+          env:
+            - name: SMEESOURCE
+              value: "${var.smee-client}"
+            - name: HTTPTARGET
+              value: "http://el-event-listener:8080"
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
+YAML
 }

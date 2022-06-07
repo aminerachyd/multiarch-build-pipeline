@@ -1,6 +1,7 @@
 variable "app-name" {}
 variable "project-name" {}
 variable "git-url" {}
+variable "git-user" {}
 variable "git-revision" {
   default = "master"
 }

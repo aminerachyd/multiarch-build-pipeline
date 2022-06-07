@@ -71,3 +71,8 @@ variable "git-user" {
 variable "git-token" {
   description = "Git token for the git repository."
 }
+
+### Misc
+variable "smee-client" {
+  description = "Smee client url for event listening, head over the smee.io. Your git repos should have webhooks configured for this url."
+}
