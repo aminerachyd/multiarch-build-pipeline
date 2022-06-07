@@ -11,7 +11,7 @@ resource "kubectl_manifest" "pipeline" {
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: multiarch-build-pipeline
+  name: multiarch-build-${var.app-name}
   namespace: ${var.project-name}-dev
 spec:
   params:
@@ -365,174 +365,120 @@ spec:
 YAML
 }
 
-module "frontend-pipelinerun" {
+resource "kubectl_manifest" "pipelinerun" {
   depends_on = [
-    kubectl_manifest.pipeline
+    kubectl_manifest.pipeline,
   ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "frontend"
-  git-url             = "https://github.com/aminerachyd/frontend"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
+  yaml_body = <<YAML
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: multiarch-build-${var.app-name}
+  namespace: ${var.project-name}-dev
+  labels:
+    tekton.dev/pipeline: multiarch-build-${var.app-name}
+spec:
+  params:
+    - name: git-url
+      value: ${var.git-url}
+    - name: git-revision
+      value: ${var.git-revision}
+    - name: image-server
+      value: ${var.image-server}
+    - name: image-namespace
+      value: ${var.image-namespace}
+    - name: build-namespace
+      value: ${var.project-name}-dev
+    - name: scan-image
+      value: '${var.scan-image}'
+    - name: lint-dockerfile
+      value: '${var.lint-dockerfile}'
+    - name: health-protocol
+      value: '${var.health-protocol}'
+    - name: health-endpoint
+      value: ${var.health-endpoint}
+    - name: build-on-x86
+      value: '${var.build-on-x86}'
+    - name: build-on-power
+      value: '${var.build-on-power}'
+    - name: build-on-z
+      value: '${var.build-on-z}'
+    - name: x86-server-url
+      value: ${var.x86-server-url}
+    - name: power-server-url
+      value: ${var.power-server-url}
+    - name: z-server-url
+      value: ${var.z-server-url}
+  pipelineRef:
+    name: multiarch-build-${var.app-name}
+  serviceAccountName: pipeline
+  timeout: 1h0m0s
+YAML
 }
 
-module "cartservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "cartservice"
-  git-url             = "https://github.com/aminerachyd/cartservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  destination-cluster = "topaz"
-  project-name        = var.project-name
-  x86-server-url      = var.x86-cluster-host
+
+
+resource "kubectl_manifest" "argo-app-test" {
+  yaml_body = <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${var.app-name}-test-${var.project-name}
+  namespace: openshift-gitops
+  labels:
+    env: test
+    project : ${var.project-name}
+spec:
+  destination:
+    name: ${var.destination-cluster}
+    namespace: ${var.project-name}-test
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: ${var.app-name}.namespaceToDeploy
+        value: ${var.project-name}-test
+    path: ${var.app-name}
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true
+YAML
 }
 
-module "emailservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "emailservice"
-  git-url             = "https://github.com/aminerachyd/emailservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-power      = true
-  destination-cluster = "opal"
-  x86-server-url      = var.x86-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
+resource "kubectl_manifest" "argo-app-prod" {
+  yaml_body = <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${var.app-name}-prod-${var.project-name}
+  namespace: openshift-gitops
+  labels:
+    env: prod
+    project : ${var.project-name}
+spec:
+  destination:
+    name: ${var.destination-cluster}
+    namespace: ${var.project-name}-prod
+  project: online-boutique
+  source:
+    helm:
+      parameters:
+      - name: ${var.app-name}.namespaceToDeploy
+        value: ${var.project-name}-prod
+    path: ${var.app-name}
+    repoURL: https://github.com/aminerachyd/multiarch-build-gitops.git
+    targetRevision: prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - PruneLast=true
+YAML
 }
 
-module "recommendationservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "recommendationservice"
-  git-url             = "https://github.com/aminerachyd/recommendationservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-power      = true
-  destination-cluster = "topaz"
-  x86-server-url      = var.x86-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
-}
-
-module "productcatalogservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "productcatalogservice"
-  git-url             = "https://github.com/aminerachyd/productcatalogservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
-}
-
-module "shippingservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "shippingservice"
-  git-url             = "https://github.com/aminerachyd/shippingservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
-}
-
-module "currencyservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "currencyservice"
-  git-url             = "https://github.com/aminerachyd/currencyservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "topaz"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
-}
-
-module "paymentservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "paymentservice"
-  git-url             = "https://github.com/aminerachyd/paymentservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "opal"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
-}
-
-module "checkoutservice-pipelinerun" {
-  depends_on = [
-    kubectl_manifest.pipeline
-  ]
-  source              = "./multiarch-pipelinerun"
-  app-name            = "checkoutservice"
-  git-url             = "https://github.com/aminerachyd/checkoutservice"
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "grpc"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
-  project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
-}

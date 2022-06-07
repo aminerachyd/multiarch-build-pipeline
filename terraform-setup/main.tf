@@ -79,11 +79,11 @@ module "dev-cluster" {
   }
 }
 
-module "multiarch-pipeline" {
+module "multiarch-pipelines" {
   depends_on = [
     module.dev-cluster
   ]
-  source             = "./module/dev-cluster/multiarch-pipeline"
+  source             = "./module/dev-cluster/multiarch-pipelines"
   project-name       = var.project-name
   x86-cluster-host   = var.x86-cluster-host
   z-cluster-host     = var.z-cluster-host
