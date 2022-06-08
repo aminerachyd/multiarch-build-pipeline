@@ -108,7 +108,7 @@ module "productcatalogservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "productcatalogservice"
-  git-url             = var.recommendationservice
+  git-url             = var.productcatalogservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
