@@ -28,7 +28,7 @@ YAML
 module "frontend-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "frontend"
-  git-url             = "https://github.com/aminerachyd/frontend"
+  git-url             = var.frontendservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -50,7 +50,7 @@ module "cartservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "cartservice"
-  git-url             = "https://github.com/aminerachyd/cartservice"
+  git-url             = var.cartservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -68,7 +68,7 @@ module "emailservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "emailservice"
-  git-url             = "https://github.com/aminerachyd/emailservice"
+  git-url             = var.emailservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -88,7 +88,7 @@ module "recommendationservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "recommendationservice"
-  git-url             = "https://github.com/aminerachyd/recommendationservice"
+  git-url             = var.recommendationservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -108,7 +108,7 @@ module "productcatalogservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "productcatalogservice"
-  git-url             = "https://github.com/aminerachyd/productcatalogservice"
+  git-url             = var.recommendationservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -130,7 +130,7 @@ module "shippingservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "shippingservice"
-  git-url             = "https://github.com/aminerachyd/shippingservice"
+  git-url             = var.shippingservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -152,7 +152,7 @@ module "currencyservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "currencyservice"
-  git-url             = "https://github.com/aminerachyd/currencyservice"
+  git-url             = var.currencyservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -174,7 +174,7 @@ module "paymentservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "paymentservice"
-  git-url             = "https://github.com/aminerachyd/paymentservice"
+  git-url             = var.paymentservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
@@ -196,7 +196,7 @@ module "checkoutservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "checkoutservice"
-  git-url             = "https://github.com/aminerachyd/checkoutservice"
+  git-url             = var.checkoutservice
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server

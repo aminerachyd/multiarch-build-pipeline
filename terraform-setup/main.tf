@@ -83,14 +83,23 @@ module "multiarch-pipelines" {
   depends_on = [
     module.dev-cluster
   ]
-  source             = "./module/dev-cluster/multiarch-pipelines"
-  git-user           = var.git-user
-  project-name       = var.project-name
-  x86-cluster-host   = var.x86-cluster-host
-  z-cluster-host     = var.z-cluster-host
-  power-cluster-host = var.power-cluster-host
-  image-namespace    = var.image-namespace
-  image-server       = var.image-server
-  smee-client        = var.smee-client
+  source                = "./module/dev-cluster/multiarch-pipelines"
+  git-user              = var.git-user
+  project-name          = var.project-name
+  x86-cluster-host      = var.x86-cluster-host
+  z-cluster-host        = var.z-cluster-host
+  power-cluster-host    = var.power-cluster-host
+  image-namespace       = var.image-namespace
+  image-server          = var.image-server
+  smee-client           = var.smee-client
+  frontendservice       = var.frontendservice
+  productcatalogservice = var.productcatalogservice
+  cartservice           = var.cartservice
+  shippingservice       = var.shippingservice
+  checkoutservice       = var.checkoutservice
+  recommendationservice = var.recommendationservice
+  paymentservice        = var.paymentservice
+  emailservice          = var.emailservice
+  currencyservice       = var.currencyservice
 }
 
