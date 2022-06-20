@@ -25,20 +25,42 @@ spec:
     - name: pipeline-name
       type: string
       description: Name of the pipeline to execute
+      default: ibm-build-push-remote-pipeline
     - name: pipeline-namespace
       type: string
-      description: Which namespace is the pipeline located in?
-    - name: openshift-server-url
-      type: string
-      description: URL of the remote OpenShift API server
+      description: Namespace in which the remot epipeline is installed
     - name: openshift-token-secret
       type: string
-      description: Name of the secret holding the authentication token
+      description: Name of the secret holding the api server url and the authentication token
     - name: run-task
-      description: Runs the task on the remote cluster
+      description: Flag to run the remote task
       default: "true"
   steps:
     - name: execute-remote-pipeline-step
+      image: quay.io/noseka1/execute-remote-pipeline:latest
+      env:
+        - name: OPENSHIFT_URL
+          valueFrom:
+            secretKeyRef:
+              name: $(params.openshift-token-secret)
+              key: openshift-url
+        - name: OPENSHIFT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.openshift-token-secret)
+              key: openshift-token
+        - name: REGISTRY_USER
+          valueFrom:
+            secretKeyRef:
+              name: docker-registry-access
+              key: REGISTRY_USER
+              optional: true
+        - name: REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: docker-registry-access
+              key: REGISTRY_PASSWORD
+              optional: true
       command:
         - /bin/bash
       args:
@@ -48,8 +70,13 @@ spec:
 
           # Check run task parameter
           if [ "$(params.run-task)" != "true" ]; then
-            echo "Skipping remote pipeline execution"
+            echo "Build not requested for this platform, skipping remote pipeline execution"
             exit 0
+          fi
+
+          if [ -z "$OPENSHIFT_URL" ]; then
+            echo OPENSHIFT_URL is empty
+            exit 1
           fi
 
           if [ -z "$OPENSHIFT_TOKEN" ]; then
@@ -60,7 +87,7 @@ spec:
           oc login \
             --token "$OPENSHIFT_TOKEN" \
             --insecure-skip-tls-verify \
-            "$(params.openshift-server-url)"
+            "$OPENSHIFT_URL"
 
           PIPELINERUN=$(
             tkn pipeline start \
@@ -69,6 +96,8 @@ spec:
               --param git-revision=$(params.git-revision) \
             	--param image-server=$(params.image-server) \
             	--param image-namespace=$(params.image-namespace) \
+            	--param registry-user=$REGISTRY_USER \
+            	--param registry-password=$REGISTRY_PASSWORD \
             	--param image-repository=$(params.image-repository) \
             	--param image-tag=$(params.image-tag) \
               $(params.pipeline-name) \
@@ -94,10 +123,3 @@ spec:
               --output jsonpath='{.status.conditions[?(@.type=="Succeeded")].message}'
             exit 1
           fi
-      image: quay.io/noseka1/execute-remote-pipeline:latest
-      env:
-        - name: OPENSHIFT_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: $(params.openshift-token-secret)
-              key: openshift-token

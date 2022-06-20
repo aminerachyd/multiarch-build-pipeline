@@ -34,7 +34,7 @@ spec:
     default: 'false'
     type: string
   - name: health-protocol
-    description: Protocol to check health after deployment, either https or grpc, defaults to grpc
+    description: Protocol to check health after deployment, either http or grpc, defaults to grpc
     default: grpc
   - name: health-endpoint
     description: Endpoint to check health after deployment, defaults to /
@@ -152,8 +152,6 @@ spec:
         value: build-push
       - name: pipeline-namespace
         value: $(params.build-namespace)
-      - name: openshift-server-url
-        value: $(params.x86-server-url)
       - name: openshift-token-secret
         value: x86-cluster-secret
       - name: run-task
@@ -181,8 +179,6 @@ spec:
         value: build-push
       - name: pipeline-namespace
         value: $(params.build-namespace)
-      - name: openshift-server-url
-        value: $(params.power-server-url)
       - name: openshift-token-secret
         value: power-cluster-secret
       - name: run-task
@@ -210,8 +206,6 @@ spec:
         value: build-push
       - name: pipeline-namespace
         value: $(params.build-namespace)
-      - name: openshift-server-url
-        value: $(params.z-server-url)
       - name: openshift-token-secret
         value: z-cluster-secret
       - name: run-task
@@ -487,14 +481,13 @@ module "pipeline-trigger" {
   ]
   source           = "./pipeline-trigger"
   app-name         = var.app-name
-  git-url          = "https://github.com/aminerachyd/frontend"
   git-user         = var.git-user
   image-namespace  = var.image-namespace
   image-server     = var.image-server
-  health-protocol  = "grpc"
-  build-on-x86     = true
-  build-on-z       = true
-  build-on-power   = true
+  health-protocol  = var.health-protocol
+  build-on-x86     = var.build-on-x86
+  build-on-z       = var.build-on-z
+  build-on-power   = var.build-on-power
   x86-server-url   = var.x86-server-url
   z-server-url     = var.z-server-url
   project-name     = var.project-name

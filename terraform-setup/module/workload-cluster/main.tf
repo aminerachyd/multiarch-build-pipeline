@@ -119,19 +119,6 @@ resource "local_sensitive_file" "pipeline-starter-token-file" {
   content  = data.kubernetes_secret.pipeline-starter-secret.data.token
 }
 
-resource "kubernetes_secret" "docker-registry-access" {
-  provider = kubernetes.cluster-context
-  type     = "Opaque"
-  metadata {
-    name      = "docker-registry-access"
-    namespace = kubernetes_namespace.dev-project.metadata[0].name
-  }
-  data = {
-    "REGISTRY_PASSWORD" = var.registry-token
-    "REGISTRY_USER"     = var.registry-user
-  }
-}
-
 resource "null_resource" "oc-apply-igc-sync" {
   depends_on = [
     kubernetes_namespace.dev-project,

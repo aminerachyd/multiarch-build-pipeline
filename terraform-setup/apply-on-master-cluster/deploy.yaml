@@ -255,6 +255,7 @@ spec:
         helm template ${RELEASE_NAME} ${CHART_PATH} \
             --namespace ${APP_NAMESPACE} \
             --set ${PREFIX}submariner.enabled="${SUBMARINER_ENABLED}" \
+            --set ${PREFIX}namespaceToDeploy="${APP_NAMESPACE}" \
             --set ${PREFIX}ingress.tlsSecretName="${TLS_SECRET_NAME}" \
             --set ${PREFIX}ingress.subdomain="${INGRESS_SUBDOMAIN}" > ./release.yaml
 

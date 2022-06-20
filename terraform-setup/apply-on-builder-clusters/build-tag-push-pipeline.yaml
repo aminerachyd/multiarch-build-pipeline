@@ -22,21 +22,31 @@ spec:
     - description: Image tag
       name: image-tag
       type: string
+    - description: Registry username
+      name: registry-user
+      type: string
+    - description: Registry password
+      name: registry-password
+      type: string
   tasks:
-  - name: build
-    params:
-      - name: git-url
-        value: $(params.git-url)
-      - name: git-revision
-        value: $(params.git-revision)
-      - name: image-server
-        value: $(params.image-server)
-      - name: image-repository
-        value: $(params.image-repository)
-      - name: image-namespace
-        value: $(params.image-namespace)
-      - name: image-tag
-        value: $(params.image-tag)
-    taskRef:
-      kind: Task
-      name: ibm-build-tag-push
+    - name: build
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: image-server
+          value: $(params.image-server)
+        - name: image-repository
+          value: $(params.image-repository)
+        - name: image-namespace
+          value: $(params.image-namespace)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: registry-user
+          value: $(params.registry-user)
+        - name: registry-password
+          value: $(params.registry-password)
+      taskRef:
+        kind: Task
+        name: ibm-build-tag-push

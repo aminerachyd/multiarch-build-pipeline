@@ -64,16 +64,19 @@ module "dev-cluster" {
     module.power-cluster,
     module.clis
   ]
-  x86-module-name   = "x86-cluster"
-  z-module-name     = "z-cluster"
-  power-module-name = "power-cluster"
-  cluster-host      = var.dev-cluster-host
-  cluster-token     = var.dev-cluster-token
-  registry-user     = var.registry-user
-  registry-token    = var.registry-token
-  gitops-repo       = var.gitops-repo
-  git-user          = var.git-user
-  git-token         = var.git-token
+  x86-module-name    = "x86-cluster"
+  z-module-name      = "z-cluster"
+  power-module-name  = "power-cluster"
+  x86-cluster-host   = var.x86-cluster-host
+  z-cluster-host     = var.z-cluster-host
+  power-cluster-host = var.power-cluster-host
+  cluster-host       = var.dev-cluster-host
+  cluster-token      = var.dev-cluster-token
+  registry-user      = var.registry-user
+  registry-token     = var.registry-token
+  gitops-repo        = var.gitops-repo
+  git-user           = var.git-user
+  git-token          = var.git-token
   providers = {
     kubernetes.cluster-context = kubernetes.dev-cluster
   }

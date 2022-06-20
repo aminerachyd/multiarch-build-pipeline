@@ -32,11 +32,11 @@ module "frontend-pipelinerun" {
   git-user            = var.git-user
   image-namespace     = var.image-namespace
   image-server        = var.image-server
-  health-protocol     = "grpc"
+  health-protocol     = "https"
   build-on-x86        = true
   build-on-z          = true
   build-on-power      = true
-  destination-cluster = "diamond"
+  destination-cluster = "opal"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
   project-name        = var.project-name
@@ -95,7 +95,7 @@ module "recommendationservice-pipelinerun" {
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-power      = true
-  destination-cluster = "topaz"
+  destination-cluster = "opal"
   x86-server-url      = var.x86-cluster-host
   project-name        = var.project-name
   power-server-url    = var.power-cluster-host
@@ -138,7 +138,7 @@ module "shippingservice-pipelinerun" {
   build-on-x86        = true
   build-on-z          = true
   build-on-power      = true
-  destination-cluster = "diamond"
+  destination-cluster = "topaz"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
   project-name        = var.project-name
@@ -182,7 +182,7 @@ module "paymentservice-pipelinerun" {
   build-on-x86        = true
   build-on-z          = true
   build-on-power      = true
-  destination-cluster = "opal"
+  destination-cluster = "diamond"
   x86-server-url      = var.x86-cluster-host
   z-server-url        = var.z-cluster-host
   project-name        = var.project-name

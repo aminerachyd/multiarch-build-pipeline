@@ -24,6 +24,8 @@ spec:
       default: "currencyservice"
     - name: image-tag
       default: "latest"
+    - name: registry-user
+    - name: registry-password
     - name: BUILDER_IMAGE
       default: quay.io/buildah/stable:v1.18.0
     - name: DOCKERFILE
@@ -77,18 +79,6 @@ spec:
       image: $(params.BUILDER_IMAGE)
       workingDir: $(params.source-dir)
       env:
-        - name: REGISTRY_USER
-          valueFrom:
-            secretKeyRef:
-              name: docker-registry-access
-              key: REGISTRY_USER
-              optional: true
-        - name: REGISTRY_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: docker-registry-access
-              key: REGISTRY_PASSWORD
-              optional: true
         - name: IBM_ENTITLED_REGISTRY_USER
           valueFrom:
             secretKeyRef:
@@ -114,9 +104,9 @@ spec:
         fi
         buildah --layers --storage-driver=$(params.STORAGE_DRIVER) bud --format=$(params.FORMAT) --tls-verify=$(params.TLSVERIFY) -f $(params.DOCKERFILE) -t ${APP_IMAGE} $(params.CONTEXT)
         set +x
-        if [[ -n "${REGISTRY_USER}" ]] && [[ -n "${REGISTRY_PASSWORD}" ]] && [[ "$(params.image-server)" != "image-registry.openshift-image-registry.svc:5000"  ]]; then
-          buildah login -u "${REGISTRY_USER}" -p "${REGISTRY_PASSWORD}" "$(params.image-server)"
-          echo "buildah login -u \"${REGISTRY_USER}\" -p \"xxxxx\" \"$(params.image-server)\""
+        if [[ -n "$(params.registry-user)" ]] && [[ -n "$(params.registry-password)" ]] && [[ "$(params.image-server)" != "image-registry.openshift-image-registry.svc:5000"  ]]; then
+          buildah login -u "$(params.registry-user)" -p "$(params.registry-password)" "$(params.image-server)"
+          echo "buildah login -u \"$(params.registry-user)\" -p \"xxxxx\" \"$(params.image-server)\""
         fi
 
         set -x

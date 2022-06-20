@@ -38,6 +38,7 @@ resource "kubernetes_secret" "x86-cluster-token" {
   }
   data = {
     openshift-token = data.local_file.sa-token-x86-cluster.content
+    openshift-url   = var.x86-cluster-host
   }
 }
 
@@ -49,6 +50,7 @@ resource "kubernetes_secret" "z-cluster-token" {
   }
   data = {
     openshift-token = data.local_file.sa-token-z-cluster.content
+    openshift-url   = var.z-cluster-host
   }
 }
 
@@ -60,6 +62,7 @@ resource "kubernetes_secret" "power-cluster-token" {
   }
   data = {
     openshift-token = data.local_file.sa-token-power-cluster.content
+    openshift-url   = var.power-cluster-host
   }
 }
 

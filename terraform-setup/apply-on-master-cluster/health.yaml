@@ -18,7 +18,7 @@ spec:
     - name: deploy-ingress-type
       default: "route"
     - name: health-protocol
-      default: "https"
+      default: "http"
     - name: health-endpoint
       default: "/health"
     - name: health-url
