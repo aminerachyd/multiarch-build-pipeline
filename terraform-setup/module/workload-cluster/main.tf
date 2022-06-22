@@ -105,6 +105,19 @@ resource "kubernetes_service_account" "pipeline-starter" {
   }
 }
 
+resource "kubernetes_secret" "docker-registry-access" {
+  provider = kubernetes.cluster-context
+  type     = "Opaque"
+  metadata {
+    name      = "docker-registry-access"
+    namespace = kubernetes_namespace.dev-project.metadata[0].name
+  }
+  data = {
+    "REGISTRY_PASSWORD" = var.registry-token
+    "REGISTRY_USER"     = var.registry-user
+  }
+}
+
 # Get secret for pipeline starter service account
 data "kubernetes_secret" "pipeline-starter-secret" {
   provider = kubernetes.cluster-context
