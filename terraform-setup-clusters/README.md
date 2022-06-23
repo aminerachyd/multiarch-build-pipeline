@@ -1,6 +1,6 @@
 # Multiarch demo Terraform setup
 
-This Terraform script setups the multiarch demo.
+This Terraform script setups the multiarch pipeline execution inside the clusters. After the script you can run multiarch pipelines in the defined namespace (terraform variable) on your application on git.
 
 ## Pre-requisites:
 
