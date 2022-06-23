@@ -56,12 +56,6 @@ spec:
             value: '${var.build-on-power}'
           - name: build-on-z
             value: '${var.build-on-z}'
-          - name: x86-server-url
-            value: ${var.x86-server-url}
-          - name: power-server-url
-            value: ${var.power-server-url}
-          - name: z-server-url
-            value: ${var.z-server-url}
         pipelineRef:
           name: multiarch-build-${var.app-name}
         serviceAccountName: pipeline

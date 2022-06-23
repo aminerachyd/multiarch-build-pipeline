@@ -1,7 +1,9 @@
 variable "app-name" {}
 variable "project-name" {}
+variable "gitops-repo" {}
 variable "git-url" {}
 variable "git-user" {}
+variable "git-token" {}
 variable "git-revision" {
   default = "master"
 }
@@ -34,15 +36,6 @@ variable "build-on-power" {
 variable "build-on-z" {
   default = "false"
   type    = string
-}
-variable "x86-server-url" {
-  default = "_"
-}
-variable "power-server-url" {
-  default = "_"
-}
-variable "z-server-url" {
-  default = "_"
 }
 
 variable "destination-cluster" {}

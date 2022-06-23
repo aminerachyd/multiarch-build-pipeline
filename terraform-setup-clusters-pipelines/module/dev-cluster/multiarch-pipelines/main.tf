@@ -28,8 +28,10 @@ YAML
 module "frontend-pipelinerun" {
   source              = "./multiarch-pipelinerun"
   app-name            = "frontend"
+  gitops-repo         = var.gitops-repo
   git-url             = var.frontendservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "https"
@@ -37,10 +39,7 @@ module "frontend-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "opal"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "cartservice-pipelinerun" {
@@ -50,15 +49,16 @@ module "cartservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "cartservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.cartservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   destination-cluster = "topaz"
   project-name        = var.project-name
-  x86-server-url      = var.x86-cluster-host
 }
 
 module "emailservice-pipelinerun" {
@@ -68,17 +68,17 @@ module "emailservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "emailservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.emailservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-power      = true
   destination-cluster = "opal"
-  x86-server-url      = var.x86-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "recommendationservice-pipelinerun" {
@@ -88,17 +88,17 @@ module "recommendationservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "recommendationservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.recommendationservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
   build-on-x86        = true
   build-on-power      = true
   destination-cluster = "opal"
-  x86-server-url      = var.x86-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "productcatalogservice-pipelinerun" {
@@ -108,8 +108,10 @@ module "productcatalogservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "productcatalogservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.productcatalogservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -117,10 +119,7 @@ module "productcatalogservice-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "shippingservice-pipelinerun" {
@@ -130,8 +129,10 @@ module "shippingservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "shippingservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.shippingservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -139,10 +140,7 @@ module "shippingservice-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "topaz"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "currencyservice-pipelinerun" {
@@ -152,8 +150,10 @@ module "currencyservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "currencyservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.currencyservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -161,10 +161,7 @@ module "currencyservice-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "topaz"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "paymentservice-pipelinerun" {
@@ -174,8 +171,10 @@ module "paymentservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "paymentservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.paymentservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -183,10 +182,7 @@ module "paymentservice-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 module "checkoutservice-pipelinerun" {
@@ -196,8 +192,10 @@ module "checkoutservice-pipelinerun" {
 
   source              = "./multiarch-pipelinerun"
   app-name            = "checkoutservice"
+  gitops-repo         = var.gitops-repo
   git-url             = var.checkoutservice
   git-user            = var.git-user
+  git-token           = var.git-token
   image-namespace     = var.image-namespace
   image-server        = var.image-server
   health-protocol     = "grpc"
@@ -205,10 +203,7 @@ module "checkoutservice-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "diamond"
-  x86-server-url      = var.x86-cluster-host
-  z-server-url        = var.z-cluster-host
   project-name        = var.project-name
-  power-server-url    = var.power-cluster-host
 }
 
 resource "kubectl_manifest" "smee-client" {

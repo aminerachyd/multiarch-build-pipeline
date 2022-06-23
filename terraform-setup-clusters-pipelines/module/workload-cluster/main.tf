@@ -132,11 +132,21 @@ resource "local_sensitive_file" "pipeline-starter-token-file" {
   content  = data.kubernetes_secret.pipeline-starter-secret.data.token
 }
 
-resource "null_resource" "oc-apply-igc-sync" {
+resource "null_resource" "oc-apply" {
+  depends_on = [
+    kubernetes_secret.docker-registry-access,
+    kubernetes_namespace.dev-project
+  ]
+  provisioner "local-exec" {
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/oc apply -f ibm-garage-tekton-tasks/pipelines -n ${kubernetes_namespace.dev-project.metadata[0].name} && ./$BINPATH/oc apply -f ibm-garage-tekton-tasks/tasks -n ${kubernetes_namespace.dev-project.metadata[0].name}"
+  }
+}
+
+resource "null_resource" "igc-sync" {
   depends_on = [
     kubernetes_namespace.dev-project,
   ]
   provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/oc apply -f ./apply-on-builder-clusters  -n ${kubernetes_namespace.dev-project.metadata[0].name} && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
   }
 }
