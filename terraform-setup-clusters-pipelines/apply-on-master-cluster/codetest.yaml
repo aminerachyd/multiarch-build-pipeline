@@ -1,0 +1,10 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: code-test
+spec:
+  steps:
+    - name: test
+      image: quay.io/buildah/stable:v1.18.0
+      script: |
+        echo "Mock code test task"
