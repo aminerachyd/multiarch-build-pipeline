@@ -16,15 +16,6 @@ resource "github_repository" "gitops-repo" {
   }
 }
 
-resource "github_repository_collaborator" "gitops-repo-collaborator" {
-  depends_on = [
-    github_repository.gitops-repo
-  ]
-  repository = github_repository.gitops-repo.name
-  username   = var.github-user
-  permission = "admin"
-}
-
 resource "github_branch" "test-branch" {
   depends_on = [
     github_repository.gitops-repo
@@ -140,8 +131,9 @@ module "dev-cluster" {
   registry-user      = var.registry-user
   registry-token     = var.registry-token
   gitops-repo        = github_repository.gitops-repo.html_url
-  github-user        = "ibm-ecosystem-lab"
-  github-token       = var.github-token
+  # User of the gitops repository
+  github-user  = var.github-user
+  github-token = var.github-token
   providers = {
     kubernetes.cluster-context = kubernetes.dev-cluster
   }
@@ -152,8 +144,9 @@ module "multiarch-pipelines" {
     module.dev-cluster,
     null_resource.git-clone-tekton-tasks-repo,
   ]
-  source                = "./module/dev-cluster/multiarch-pipelines"
-  gitops-repo           = github_repository.gitops-repo.html_url
+  source      = "./module/multiarch-pipelines"
+  gitops-repo = github_repository.gitops-repo.html_url
+  # User of the github code repositories
   github-user           = "ibm-ecosystem-lab"
   github-token          = var.github-token
   project-name          = var.project-name

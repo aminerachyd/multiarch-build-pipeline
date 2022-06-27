@@ -58,14 +58,14 @@ variable "registry-token" {
 }
 
 
-### Git repo access
+### Github repo access
 
 variable "github-user" {
-  description = "Git user for the git repository."
+  description = "Github user for creating the GitOps repository."
 }
 
 variable "github-token" {
-  description = "Git token for the git repository."
+  description = "Github token for creating the GitOps repository, needs to have access to repo deletion in order to delete the repo when destroying the Terraform project. Used also for accessing the Github microservices repositories to create webhooks."
 }
 
 ### Misc

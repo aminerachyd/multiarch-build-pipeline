@@ -57,7 +57,7 @@ spec:
           - name: build-on-z
             value: '${var.build-on-z}'
         pipelineRef:
-          name: multiarch-build-${var.app-name}
+          name: ${var.app-name}
         serviceAccountName: pipeline
 YAML
 }
