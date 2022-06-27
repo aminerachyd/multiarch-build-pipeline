@@ -106,7 +106,7 @@ resource "null_resource" "igc-gitops" {
     null_resource.igc-sync,
   ]
   provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/igc gitops ${var.gitops-repo} -n ${kubernetes_namespace.dev-project.metadata[0].name} -u ${var.git-user} -p ${var.git-token}"
+    command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/igc gitops ${var.gitops-repo} -n ${kubernetes_namespace.dev-project.metadata[0].name} -u ${var.github-user} -p ${var.github-token}"
   }
 }
 

@@ -8,7 +8,7 @@ terraform {
 
 resource "null_resource" "igc-pipeline" {
   provisioner "local-exec" {
-    command = "BINPATH=\"bin\" && ./$BINPATH/igc pipeline ${var.git-url} --username ${var.git-user} --password ${var.git-token} --pipeline ibm-general-multiarch --param image-server=${var.image-server} --param image-namespace=${var.image-namespace} --param scan-image=${var.scan-image} --param lint-dockerfile=${var.lint-dockerfile} --param health-protocol=${var.health-protocol} --param health-endpoint=${var.health-endpoint} --param build-on-x86=${var.build-on-x86} --param build-on-power=${var.build-on-power} --param build-on-z=${var.build-on-z} --tekton"
+    command = "BINPATH=\"bin\" && ./$BINPATH/igc pipeline ${var.git-url} --username ${var.github-user} --password ${var.github-token} --pipeline ibm-general-multiarch --param image-server=${var.image-server} --param image-namespace=${var.image-namespace} --param scan-image=${var.scan-image} --param lint-dockerfile=${var.lint-dockerfile} --param health-protocol=${var.health-protocol} --param health-endpoint=${var.health-endpoint} --param build-on-x86=${var.build-on-x86} --param build-on-power=${var.build-on-power} --param build-on-z=${var.build-on-z} --tekton"
   }
 }
 
@@ -83,7 +83,7 @@ module "pipeline-trigger" {
   ]
   source          = "./pipeline-trigger"
   app-name        = var.app-name
-  git-user        = var.git-user
+  github-user     = var.github-user
   image-namespace = var.image-namespace
   image-server    = var.image-server
   health-protocol = var.health-protocol

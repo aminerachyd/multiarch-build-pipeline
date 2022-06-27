@@ -4,6 +4,54 @@ module "clis" {
   bin_dir = "bin"
 }
 
+resource "github_repository" "gitops-repo" {
+  name        = "${var.project-name}-gitops"
+  description = "Gitops for the ${var.project-name} project."
+
+  visibility = "public"
+
+  template {
+    owner      = "IBM"
+    repository = "template-argocd-gitops"
+  }
+}
+
+resource "github_repository_collaborator" "gitops-repo-collaborator" {
+  depends_on = [
+    github_repository.gitops-repo
+  ]
+  repository = github_repository.gitops-repo.name
+  username   = var.github-user
+  permission = "admin"
+}
+
+resource "github_branch" "test-branch" {
+  depends_on = [
+    github_repository.gitops-repo
+  ]
+  repository = github_repository.gitops-repo.name
+  branch     = "test"
+}
+
+resource "github_branch" "prod-branch" {
+  depends_on = [
+    github_repository.gitops-repo
+  ]
+  repository = github_repository.gitops-repo.name
+  branch     = "prod"
+}
+
+resource "github_branch_default" "default-branch-test" {
+  depends_on = [
+    github_repository.gitops-repo,
+    github_branch.test-branch,
+    github_branch.prod-branch
+  ]
+
+  repository = github_repository.gitops-repo.name
+  branch     = "test"
+}
+
 resource "null_resource" "git-clone-tekton-tasks-repo" {
   # TODO Change to garage org git repo
   provisioner "local-exec" {
@@ -91,9 +139,9 @@ module "dev-cluster" {
   cluster-token      = var.dev-cluster-token
   registry-user      = var.registry-user
   registry-token     = var.registry-token
-  gitops-repo        = var.gitops-repo
-  git-user           = var.git-user
-  git-token          = var.git-token
+  gitops-repo        = github_repository.gitops-repo.html_url
+  github-user        = "ibm-ecosystem-lab"
+  github-token       = var.github-token
   providers = {
     kubernetes.cluster-context = kubernetes.dev-cluster
   }
@@ -105,9 +153,9 @@ module "multiarch-pipelines" {
     null_resource.git-clone-tekton-tasks-repo,
   ]
   source                = "./module/dev-cluster/multiarch-pipelines"
-  gitops-repo           = var.gitops-repo
-  git-user              = var.git-user
-  git-token             = var.git-token
+  gitops-repo           = github_repository.gitops-repo.html_url
+  github-user           = "ibm-ecosystem-lab"
+  github-token          = var.github-token
   project-name          = var.project-name
   x86-cluster-host      = var.x86-cluster-host
   z-cluster-host        = var.z-cluster-host

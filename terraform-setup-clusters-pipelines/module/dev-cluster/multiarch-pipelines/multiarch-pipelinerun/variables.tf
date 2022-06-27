@@ -2,8 +2,8 @@ variable "app-name" {}
 variable "project-name" {}
 variable "gitops-repo" {}
 variable "git-url" {}
-variable "git-user" {}
-variable "git-token" {}
+variable "github-user" {}
+variable "github-token" {}
 variable "git-revision" {
   default = "master"
 }

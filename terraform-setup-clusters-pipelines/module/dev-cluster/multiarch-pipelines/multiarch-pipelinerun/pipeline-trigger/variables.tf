@@ -1,6 +1,6 @@
 variable "app-name" {}
 variable "project-name" {}
-variable "git-user" {
+variable "github-user" {
 
 }
 variable "git-revision" {

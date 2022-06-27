@@ -5,8 +5,8 @@ variable "power-cluster-host" {}
 variable "image-namespace" {}
 variable "image-server" {}
 variable "gitops-repo" {}
-variable "git-user" {}
-variable "git-token" {}
+variable "github-user" {}
+variable "github-token" {}
 variable "smee-client" {}
 variable "frontendservice" {}
 variable "productcatalogservice" {}

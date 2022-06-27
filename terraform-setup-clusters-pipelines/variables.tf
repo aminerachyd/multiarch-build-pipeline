@@ -60,15 +60,11 @@ variable "registry-token" {
 
 ### Git repo access
 
-variable "gitops-repo" {
-  description = "Git repo for the gitops."
-}
-
-variable "git-user" {
+variable "github-user" {
   description = "Git user for the git repository."
 }
 
-variable "git-token" {
+variable "github-token" {
   description = "Git token for the git repository."
 }
 
@@ -80,37 +76,37 @@ variable "smee-client" {
 ### Microservices github repos
 variable "frontendservice" {
   description = "Git repo for the frontend microservice."
-  default     = "https://github.com/aminerachyd/frontend"
+  default     = "https://github.com/ibm-ecosystem-lab/frontend"
 }
 variable "productcatalogservice" {
   description = "Git repo for the product catalog microservice."
-  default     = "https://github.com/aminerachyd/productcatalogservice"
+  default     = "https://github.com/ibm-ecosystem-lab/productcatalogservice"
 }
 variable "cartservice" {
   description = "Git repo for the cart microservice."
-  default     = "https://github.com/aminerachyd/cartservice"
+  default     = "https://github.com/ibm-ecosystem-lab/cartservice"
 }
 variable "shippingservice" {
   description = "Git repo for the shipping microservice."
-  default     = "https://github.com/aminerachyd/shippingservice"
+  default     = "https://github.com/ibm-ecosystem-lab/shippingservice"
 }
 variable "checkoutservice" {
   description = "Git repo for the checkout microservice."
-  default     = "https://github.com/aminerachyd/checkoutservice"
+  default     = "https://github.com/ibm-ecosystem-lab/checkoutservice"
 }
 variable "recommendationservice" {
   description = "Git repo for the recommendation microservice."
-  default     = "https://github.com/aminerachyd/recommendationservice"
+  default     = "https://github.com/ibm-ecosystem-lab/recommendationservice"
 }
 variable "paymentservice" {
   description = "Git repo for the payment microservice."
-  default     = "https://github.com/aminerachyd/paymentservice"
+  default     = "https://github.com/ibm-ecosystem-lab/paymentservice"
 }
 variable "emailservice" {
   description = "Git repo for the email microservice."
-  default     = "https://github.com/aminerachyd/emailservice"
+  default     = "https://github.com/ibm-ecosystem-lab/emailservice"
 }
 variable "currencyservice" {
   description = "Git repo for the currency microservice."
-  default     = "https://github.com/aminerachyd/currencyservice"
+  default     = "https://github.com/ibm-ecosystem-lab/currencyservice"
 }
