@@ -90,9 +90,6 @@ module "dev-cluster" {
   cluster-token      = var.dev-cluster-token
   registry-user      = var.registry-user
   registry-token     = var.registry-token
-  gitops-repo        = var.gitops-repo
-  git-user           = var.git-user
-  git-token          = var.git-token
   providers = {
     kubernetes.cluster-context = kubernetes.dev-cluster
   }

@@ -98,14 +98,3 @@ resource "null_resource" "igc-sync" {
     command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/igc sync ${kubernetes_namespace.dev-project.metadata[0].name} --tekton"
   }
 }
-
-# resource "null_resource" "igc-gitops" {
-#   depends_on = [
-#     kubernetes_namespace.dev-project,
-#     null_resource.oc-apply-igc-sync,
-#   ]
-#   provisioner "local-exec" {
-#     command = "BINPATH=\"bin\" && ./$BINPATH/oc login --token=${var.cluster-token} --server=${var.cluster-host} --insecure-skip-tls-verify && ./$BINPATH/igc gitops ${var.gitops-repo} -n ${kubernetes_namespace.dev-project.metadata[0].name} -u ${var.git-user} -p ${var.git-token}"
-#   }
-# }
-

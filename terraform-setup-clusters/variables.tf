@@ -5,7 +5,7 @@ variable "project-name" {
 ### Clusters hosts
 
 variable "dev-cluster-host" {
-  description = "Hostname of the dev cluster. This cluster will be used for the development stage"
+  description = "Hostname of the dev cluster. This cluster will be used for the development stage, it should have the Cloud-Native Toolkit installed."
 }
 
 variable "x86-cluster-host" {
@@ -40,34 +40,10 @@ variable "power-cluster-token" {
 
 ### Image registry access
 
-variable "image-server" {
-  default     = "quay.io"
-  description = "Hostname of the image registry server."
-}
-
-variable "image-namespace" {
-  description = "Namespace of the image registry (user or organization)."
-}
-
 variable "registry-user" {
   description = "Username for the image registry."
 }
 
 variable "registry-token" {
   description = "Token for the image registry."
-}
-
-
-### Git repo access
-
-variable "gitops-repo" {
-  description = "Git repo for the gitops."
-}
-
-variable "git-user" {
-  description = "Git user for the git repository."
-}
-
-variable "git-token" {
-  description = "Git token for the git repository."
 }

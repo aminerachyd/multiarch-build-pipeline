@@ -6,9 +6,6 @@ variable "cluster-host" {}
 variable "cluster-token" {}
 variable "registry-user" {}
 variable "registry-token" {}
-variable "gitops-repo" {}
-variable "git-user" {}
-variable "git-token" {}
 variable "x86-cluster-host" {}
 variable "power-cluster-host" {}
 variable "z-cluster-host" {}
