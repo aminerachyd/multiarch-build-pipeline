@@ -57,7 +57,6 @@ variable "registry-token" {
   description = "Token for the image registry."
 }
 
-
 ### Github repo access
 
 variable "github-user" {
@@ -70,7 +69,8 @@ variable "github-token" {
 
 ### Misc
 variable "smee-client" {
-  description = "Smee client url for event listening, head over the smee.io. Your git repos should have webhooks configured for this url."
+  description = "Smee client url for event listening, head over the smee.io. Your git repos should have webhooks configured for this url. This is only used because the clusters are not accessible without a VPN. The default value is the URL configured for the repositories webhooks. If you're using the default repositories, don't change this."
+  default     = "https://smee.io/1z0sn0jELNsxNcia"
 }
 
 ### Microservices github repos
