@@ -5,7 +5,7 @@ variable "project-name" {
 ### Clusters hosts
 
 variable "dev-cluster-host" {
-  description = "Hostname of the dev cluster. This cluster will be used for the development stage"
+  description = "Hostname of the dev cluster. This cluster will be used for the development stage, it should have the Cloud-Native Toolkit installed."
 }
 
 variable "x86-cluster-host" {
