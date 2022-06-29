@@ -32,6 +32,8 @@ spec:
       parameters:
       - name: ${var.app-name}.namespaceToDeploy
         value: ${var.project-name}-test
+      - name: ${var.app-name}.submariner.enabled
+        value: "true"
     path: ${var.app-name}
     repoURL: ${var.gitops-repo}
     targetRevision: test
