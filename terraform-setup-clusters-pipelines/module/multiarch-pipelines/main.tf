@@ -25,27 +25,8 @@ YAML
 }
 
 
-module "frontend-pipelinerun" {
-  source              = "./multiarch-pipelinerun"
-  app-name            = "frontend"
-  gitops-repo         = var.gitops-repo
-  git-url             = var.frontendservice
-  github-user         = var.github-user
-  github-token        = var.github-token
-  image-namespace     = var.image-namespace
-  image-server        = var.image-server
-  health-protocol     = "https"
-  build-on-x86        = true
-  build-on-z          = true
-  build-on-power      = true
-  destination-cluster = "opal"
-  project-name        = var.project-name
-}
 
 module "cartservice-pipelinerun" {
-  depends_on = [
-    module.frontend-pipelinerun
-  ]
 
   source              = "./multiarch-pipelinerun"
   app-name            = "cartservice"
@@ -203,6 +184,27 @@ module "checkoutservice-pipelinerun" {
   build-on-z          = true
   build-on-power      = true
   destination-cluster = "diamond"
+  project-name        = var.project-name
+}
+
+module "frontend-pipelinerun" {
+  depends_on = [
+    module.checkoutservice-pipelinerun
+  ]
+
+  source              = "./multiarch-pipelinerun"
+  app-name            = "frontend"
+  gitops-repo         = var.gitops-repo
+  git-url             = var.frontendservice
+  github-user         = var.github-user
+  github-token        = var.github-token
+  image-namespace     = var.image-namespace
+  image-server        = var.image-server
+  health-protocol     = "https"
+  build-on-x86        = true
+  build-on-z          = true
+  build-on-power      = true
+  destination-cluster = "opal"
   project-name        = var.project-name
 }
 
