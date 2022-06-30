@@ -210,7 +210,7 @@ module "frontend-pipelinerun" {
 
 resource "kubectl_manifest" "smee-client" {
   depends_on = [
-    module.checkoutservice-pipelinerun
+    module.frontend-pipelinerun
   ]
 
   yaml_body = <<YAML

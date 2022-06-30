@@ -26,10 +26,10 @@ spec:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       metadata:
-        generateName: multiarch-build-${var.app-name}
+        generateName: ${var.app-name}-
         namespace: ${var.project-name}-dev
         labels:
-          tekton.dev/pipeline: multiarch-build-${var.app-name}
+          tekton.dev/pipeline: ${var.app-name}
       spec:
         params:
           - name: git-url

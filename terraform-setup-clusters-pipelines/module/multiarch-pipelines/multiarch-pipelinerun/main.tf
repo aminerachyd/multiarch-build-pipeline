@@ -87,7 +87,7 @@ module "pipeline-trigger" {
   ]
   source          = "./pipeline-trigger"
   app-name        = var.app-name
-  github-user     = var.github-user
+  github-user     = "ibm-ecosystem-lab"
   image-namespace = var.image-namespace
   image-server    = var.image-server
   health-protocol = var.health-protocol
